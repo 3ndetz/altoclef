@@ -26,6 +26,18 @@ public class UserAuth {
         UserListFile.load(WHITELIST_PATH, newList -> _whitelist = newList);
     }
 
+    public boolean addUserToWhitelist(String username) {
+        if (_whitelist.containsUser(username)) return false;
+        _whitelist.addLine(username);
+        return true;
+    }
+
+    public boolean removeUserFromWhitelist(String username) {
+        if (!_whitelist.containsUser(username)) return false;
+        _whitelist.removeLine(username);
+        return true;
+    }
+
     public boolean isUserAuthorized(String username) {
 
         // Blacklist gets first priority.

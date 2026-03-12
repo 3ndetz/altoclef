@@ -14,58 +14,195 @@ public class WhisperChecker {
 
     private static String _lastMessage = null;
 
-    // this didn't work correctly, so I rewrote it without fancy regex stuff -miran
-    public static MessageResult tryParse(String ourUsername, String whisperFormat, String message) {
-        List<String> parts = new ArrayList<>(List.of("{from}", "{to}", "{message}"));
+    public boolean isVanillaWhisperMessage(String message) {
+        return message.matches("^\\[\\w+\\] whispers to you:.*") ||
+                message.matches("^\\[\\w+\\] шепчет вам:.*");
+    }
 
-        // Sort by the order of appearance in whisperFormat.
+    public static String escapeRegexChars(String text) {
+        List<Character> regexKillingChars = new ArrayList<>(
+                Arrays.asList('[', ']', '.', '^', '?', '*', '$', '(', ')', '/', '|', '+'));
+        for (Character killer : regexKillingChars) {
+            String charr = killer.toString();
+            text = text.replace(charr, "\\" + charr);
+        }
+        return text;
+    }
+
+    public static MessageResult tryParse(String ourUsername, String whisperFormatInp, String message) {
+        List<String> parts = new ArrayList<>(Arrays.asList("{from}", "{to}", "{message}"));
+        String whisperFormat = escapeRegexChars(whisperFormatInp);
         parts.sort(Comparator.comparingInt(whisperFormat::indexOf));
         parts.removeIf(part -> !whisperFormat.contains(part));
 
-        ArrayList<String> messageParts = new ArrayList<>(Arrays.stream(message.split(" ")).toList());
-        MessageResult result = new MessageResult();
-        for (int i = 0; i < parts.size(); i++) {
-            String part = parts.get(i);
-            if (messageParts.isEmpty()) return null;
-
-            if (part.equals("{from}")) {
-                result.from = messageParts.remove(0);
-            } else if (part.equals("{to}")) {
-                String toUser = messageParts.remove(0);
-                if (!toUser.equals(ourUsername)) {
-                    Debug.logInternal("Rejected message since it is sent to " + toUser + " and not " + ourUsername);
-                    return null;
+        String regexFormat = Pattern.quote(whisperFormat);
+        for (String part : parts) {
+            regexFormat = regexFormat.replace(part, "(.+)");
+        }
+        if (regexFormat.startsWith("\\Q")) {
+            regexFormat = regexFormat.substring("\\Q".length());
+        }
+        if (regexFormat.endsWith("\\E")) {
+            regexFormat = regexFormat.substring(0, regexFormat.length() - "\\E".length());
+        }
+        Pattern p = Pattern.compile(regexFormat);
+        Matcher m = p.matcher(message);
+        Map<String, String> values = new HashMap<>();
+        if (m.matches()) {
+            for (int i = 0; i < m.groupCount(); ++i) {
+                if (i >= parts.size()) {
+                    Debug.logError("Invalid whisper format parsing: " + whisperFormat + " for message: " + message);
+                    break;
                 }
-            } else if (part.equals("{message}")) {
-                List<String> messageList = messageParts.subList(0,messageParts.size()-(parts.size()-i-1));
-
-                StringBuilder msg = new StringBuilder(messageList.get(0));
-
-                for (int j = 1; j < messageList.size(); j++) {
-                    msg.append(" ").append(messageList.get(j));
-                }
-
-                result.message = msg.toString();
-            } else {
-                throw new IllegalArgumentException("Unknown part: "+part);
+                values.put(parts.get(i), m.group(i + 1));
             }
-
         }
 
-        return result;
+        if (values.containsKey("{to}")) {
+            String toUser = values.get("{to}");
+            if (!toUser.equals(ourUsername)) {
+                Debug.logInternal("Rejected message since it is sent to " + toUser + " and not " + ourUsername);
+                return null;
+            }
+        }
+        if (values.containsKey("{from}") && values.containsKey("{message}")) {
+            MessageResult result = new MessageResult();
+            result.from = values.get("{from}");
+            result.message = values.get("{message}");
+            return result;
+        }
+        return null;
+    }
+
+    public static MessageResult chatParse(String ourUsername, String[] chatFormatMas, String message) {
+        return chatParse(ourUsername, chatFormatMas, message, "exact");
+    }
+
+    public static MessageResult chatParse(String ourUsername, String[] chatFormatMas, String message,
+                                          String ExactState) {
+        List<String> parts = new ArrayList<>(
+                Arrays.asList("{team}", "{global}", "{starterPrefix}", "{donate}", "{suffix}", "{clan}", "{rank}",
+                        "{from}", "{to}", "{message}"));
+        String serverName = chatFormatMas[0];
+        String serverMode = chatFormatMas[2];
+        String chatFormatNew = new String(chatFormatMas[1]);
+        message = message.replace("\\", "");
+        // Normalize arrows
+        List<String> arrows = new ArrayList<>(Arrays.asList("➥", "->", "➡", "➥", "➯", "➨", "›", "►", "⋙", "»", "⪼", "⇨"));
+        for (String arrow : arrows) {
+            if (!chatFormatNew.contains(arrow)) {
+                message = message.replace(arrow, ">");
+            }
+        }
+        chatFormatNew = escapeRegexChars(chatFormatNew);
+        String chatFormat = chatFormatNew;
+
+        parts.sort(Comparator.comparingInt(chatFormat::indexOf));
+        parts.removeIf(part -> !chatFormat.contains(part));
+
+        String regexFormat = Pattern.quote(chatFormat);
+        for (String part : parts) {
+            regexFormat = regexFormat.replace(part, "(.+)");
+        }
+        if (regexFormat.startsWith("\\Q")) {
+            regexFormat = regexFormat.substring("\\Q".length());
+        }
+        if (regexFormat.endsWith("\\E")) {
+            regexFormat = regexFormat.substring(0, regexFormat.length() - "\\E".length());
+        }
+        Pattern p = Pattern.compile(regexFormat);
+        Matcher m = p.matcher(message);
+        Map<String, String> values = new HashMap<>();
+        if (m.matches()) {
+            for (int i = 0; i < m.groupCount(); ++i) {
+                if (i >= parts.size()) {
+                    Debug.logError("Invalid whisper format parsing: " + chatFormat + " for message: " + message);
+                    break;
+                }
+                values.put(parts.get(i), m.group(i + 1));
+            }
+        }
+
+        if (values.containsKey("{to}")) {
+            String toUser = values.get("{to}");
+            if (!toUser.equals(ourUsername)) {
+                Debug.logInternal("Rejected message since it is sent to " + toUser + " and not " + ourUsername);
+                return null;
+            }
+        }
+
+        List<Character> nickKillingChars = new ArrayList<>(
+                Arrays.asList('~', '[', ']', '.', '^', '?', '*', '$', '(', ')', '/', '|', '+'));
+        if (values.containsKey("{from}") && values.containsKey("{message}")) {
+            String name = values.get("{from}");
+            if (name != null && !name.isBlank()) {
+                String[] splittedName = name.strip().split(" ");
+                if (splittedName.length > 0) {
+                    name = splittedName[0];
+                    for (Character killer : nickKillingChars) {
+                        name = name.replace(killer.toString(), "");
+                    }
+                    MessageResult result = new MessageResult();
+                    if (values.containsKey("{starterPrefix}")) result.starter_prefix = values.get("{starterPrefix}");
+                    if (values.containsKey("{rank}"))         result.rank = values.get("{rank}");
+                    if (values.containsKey("{clan}"))         result.clan = values.get("{clan}");
+                    if (values.containsKey("{team}"))         result.team = values.get("{team}");
+                    if (values.containsKey("{global}"))       result.chat_type = values.get("{global}");
+                    result.server = serverName;
+                    result.serverMode = serverMode;
+                    result.serverExactPrediction = ExactState;
+                    result.from = name;
+                    result.message = values.get("{message}");
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    public MessageResult receiveChat(AltoClef mod, String ourUsername, String msg, String server, String servermode) {
+        boolean duplicate = msg.equals(_lastMessage);
+        if (duplicate && !_repeatTimer.elapsed()) {
+            _repeatTimer.reset();
+            return null;
+        }
+        _lastMessage = msg;
+
+        // 1. exact server + mode match
+        for (String[] format : ButlerConfig.getInstance().chatFormats) {
+            if (server.equals(format[0]) && servermode.equals(format[2])) {
+                MessageResult check = chatParse(ourUsername, format, msg);
+                if (check != null && check.from != null && check.message != null) return check;
+            }
+        }
+        // 2. server only
+        for (String[] format : ButlerConfig.getInstance().chatFormats) {
+            if (server.equals(format[0])) {
+                MessageResult check = chatParse(ourUsername, format, msg, "server");
+                if (check != null && check.from != null && check.message != null) return check;
+            }
+        }
+        // 3. universal
+        for (String[] format : ButlerConfig.getInstance().chatFormats) {
+            if ("universal".equals(format[0])) {
+                MessageResult check = chatParse(ourUsername, format, msg, "universal");
+                if (check != null && check.from != null && check.message != null) return check;
+            }
+        }
+        // 4. random (any format)
+        for (String[] format : ButlerConfig.getInstance().chatFormats) {
+            MessageResult check = chatParse(ourUsername, format, msg, "random");
+            if (check != null && check.from != null && check.message != null) return check;
+        }
+        return null;
     }
 
     public MessageResult receiveMessage(AltoClef mod, String ourUsername, String msg) {
-        String foundMiddlePart = "";
-        int index = -1;
-
-        boolean duplicate = (msg.equals(_lastMessage));
+        boolean duplicate = msg.equals(_lastMessage);
         if (duplicate && !_repeatTimer.elapsed()) {
             _repeatTimer.reset();
-            // It's probably an actual duplicate. IDK why we get those but yeah.
             return null;
         }
-
         _lastMessage = msg;
 
         for (String format : ButlerConfig.getInstance().whisperFormats) {
@@ -77,20 +214,24 @@ public class WhisperChecker {
                 return check;
             }
         }
-
         return null;
     }
 
     public static class MessageResult {
         public String from;
         public String message;
+        public String rank;
+        public String serverMode;
+        public String server;
+        public String clan;
+        public String team;
+        public String chat_type;
+        public String serverExactPrediction;
+        public String starter_prefix;
 
         @Override
         public String toString() {
-            return "MessageResult{" +
-                    "from='" + from + '\'' +
-                    ", message='" + message + '\'' +
-                    '}';
+            return "MessageResult{from='" + from + "', message='" + message + "'}";
         }
     }
 }

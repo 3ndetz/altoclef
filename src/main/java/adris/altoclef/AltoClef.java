@@ -261,19 +261,20 @@ public class AltoClef implements ModInitializer {
             initializePythonSender();
         });
 
-        // Forward incoming server chat/game messages to Py4j bridge
+        // Forward incoming server chat/game messages through Butler
+        // (server detection, chatType, autoJoin, strong/weak py4j forwarding)
         String _modChatPrefixNoCodes = getModSettings().getChatLogPrefix();
         ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
             String msg = message.getString();
-            if (getInfoSender() != null && !msg.startsWith(_modChatPrefixNoCodes))
-                getInfoSender().onChatMessage(msg);
+            if (!msg.startsWith(_modChatPrefixNoCodes) && getButler() != null)
+                getButler().onReceiveChat(msg);
             return true;
         });
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             if (!overlay) {
                 String msg = message.getString();
-                if (getInfoSender() != null && !msg.contains(_modChatPrefixNoCodes))
-                    getInfoSender().onChatMessage(msg);
+                if (!msg.contains(_modChatPrefixNoCodes) && getButler() != null)
+                    getButler().onReceiveChat(msg);
             }
             return true;
         });
