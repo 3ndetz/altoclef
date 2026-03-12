@@ -6,6 +6,7 @@ import adris.altoclef.butler.ButlerConfig;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.multiplayer.RejoinEvent;
 import adris.altoclef.mixins.DeathScreenAccessor;
+import adris.altoclef.multiversion.ConnectScreenVer;
 import adris.altoclef.tasks.fix.StuckFixingTask;
 import adris.altoclef.tasks.movement.GetToXZTask;
 import adris.altoclef.tasks.multiplayer.LobbyTask;
@@ -26,7 +27,6 @@ import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.network.ServerAddress;
@@ -301,7 +301,7 @@ public class GameMenuTaskChain extends SingleTaskChain {
                 } else {
                     Debug.logMessage("RECONNECTING: Connect to " + _prevServerEntry.address.toString());
                     MinecraftClient client = MinecraftClient.getInstance();
-                    ConnectScreen.connect(screen, client, ServerAddress.parse(_prevServerEntry.address), _prevServerEntry, false, null);
+                    ConnectScreenVer.connect(screen, client, ServerAddress.parse(_prevServerEntry.address), _prevServerEntry, false);
                     if (_needToStopTasksOnReconnect) {
                         mod.cancelUserTask();
                         _needToStopTasksOnReconnect = false;

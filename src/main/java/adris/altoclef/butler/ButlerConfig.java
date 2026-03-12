@@ -61,6 +61,10 @@ public class ButlerConfig {
      * Disable this if you want to be able to send normal messages and not butler commands.
      */
     public boolean requirePrefixMsg = false;
+    /**
+     * If true, bot will automatically navigate minigame menus (lobby selection, game start buttons).
+     */
+    public boolean autoJoin = false;
 
     public static ButlerConfig getInstance() {
         return _instance;
