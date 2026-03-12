@@ -104,6 +104,14 @@ public class AltoClef implements ModInitializer {
         return null;
     }
 
+    public static String getSelfName() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null) return "";
+        if (client.getSession() != null) return client.getSession().getUsername();
+        if (client.player != null) return client.player.getName().getString();
+        return "";
+    }
+
     // Are we in game (playing in a server/world)
     public static boolean inGame() {
         return MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().getNetworkHandler() != null;

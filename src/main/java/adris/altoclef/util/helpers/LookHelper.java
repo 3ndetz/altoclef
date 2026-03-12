@@ -705,4 +705,14 @@ public interface LookHelper {
         return getLookRotation(mod, targetPosition);
     }
 
+    public static double getLookingProbability(PlayerEntity plyFrom, PlayerEntity plyTo) {
+        return getLookingProbability(plyFrom.getEyePos(), plyTo.getEyePos(), plyFrom.getRotationVec(0));
+    }
+
+    public static double getLookingProbability(Vec3d eyeFrom, Vec3d eyeTo, Vec3d rotationFrom) {
+        if (eyeFrom == null || eyeTo == null || rotationFrom == null) return 0d;
+        Vec3d toEntity = eyeTo.subtract(eyeFrom);
+        return toEntity.normalize().dotProduct(rotationFrom);
+    }
+
 }

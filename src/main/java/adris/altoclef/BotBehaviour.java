@@ -1,5 +1,6 @@
 package adris.altoclef;
 
+import adris.altoclef.trackers.threats.DamageTrackerStrategy;
 import adris.altoclef.util.slots.Slot;
 import baritone.altoclef.AltoClefSettings;
 import baritone.api.Settings;
@@ -29,6 +30,16 @@ public class BotBehaviour {
 
     private final AltoClef mod;
     Deque<State> states = new ArrayDeque<>();
+
+    private DamageTrackerStrategy _damageTrackerStrategy = DamageTrackerStrategy.Smart;
+
+    public DamageTrackerStrategy getDamageTrackerStrategy() {
+        return _damageTrackerStrategy;
+    }
+
+    public void setDamageTrackerStrategy(DamageTrackerStrategy strategy) {
+        _damageTrackerStrategy = strategy;
+    }
 
     public BotBehaviour(AltoClef mod) {
         this.mod = mod;

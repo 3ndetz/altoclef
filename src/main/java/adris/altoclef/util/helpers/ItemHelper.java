@@ -2,6 +2,7 @@ package adris.altoclef.util.helpers;
 
 import adris.altoclef.AltoClef;
 import adris.altoclef.multiversion.BlockTagVer;
+import adris.altoclef.trackers.threats.WeaponThreat;
 import adris.altoclef.util.slots.Slot;
 import baritone.api.utils.input.Input;
 import adris.altoclef.multiversion.item.ItemVer;
@@ -12,6 +13,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.MapColor;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -563,6 +567,51 @@ public class ItemHelper {
 
     private static String removeMCFormatCodes(String text) {
         return text.replaceAll("§[0-9a-fk-or]", "");
+    }
+
+    // --- Combat item arrays and weapon threat helpers (ported from autoclef) ---
+
+    public static final net.minecraft.item.Item[] MMKillerWeapons = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.SHEARS, net.minecraft.item.Items.IRON_SWORD, net.minecraft.item.Items.IRON_AXE
+    };
+    public static final net.minecraft.item.Item[] MMDetectiveWeapons = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.BOW, net.minecraft.item.Items.CROSSBOW
+    };
+
+    public static final net.minecraft.item.Item[] RangedTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.BOW, net.minecraft.item.Items.CROSSBOW,
+        net.minecraft.item.Items.SPLASH_POTION, net.minecraft.item.Items.LINGERING_POTION,
+        net.minecraft.item.Items.SNOWBALL
+    };
+
+    public static boolean holdWeapon(PlayerEntity entity, net.minecraft.item.Item... items) {
+        for (net.minecraft.item.Item weapon : items) {
+            if (entity.getMainHandStack().isOf(weapon)) return true;
+        }
+        return false;
+    }
+
+    public static WeaponThreat getWeaponThreat(AltoClef mod, PlayerEntity entity) {
+        ItemStack stack = entity.getMainHandStack();
+        if (stack != null) {
+            if (holdWeapon(entity, RangedTopPriority)) return WeaponThreat.Ranged;
+            net.minecraft.item.Item handItem = stack.getItem();
+            float damage = (float) entity.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            if (handItem instanceof ToolItem tool && (tool instanceof SwordItem || tool instanceof AxeItem)) {
+                damage += tool.getMaterial().getAttackDamage() + 3;
+            }
+            //#if MC >= 12100
+            if (handItem instanceof net.minecraft.item.TridentItem || handItem instanceof net.minecraft.item.MaceItem) {
+                damage += 7f;
+            }
+            //#else
+            //$$ if (handItem instanceof net.minecraft.item.TridentItem) {
+            //$$     damage += 7f;
+            //$$ }
+            //#endif
+            if (damage >= 4f) return WeaponThreat.Melee;
+        }
+        return WeaponThreat.Harmless;
     }
 
 }
