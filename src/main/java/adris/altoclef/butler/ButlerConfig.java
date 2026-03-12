@@ -62,6 +62,10 @@ public class ButlerConfig {
      */
     public boolean requirePrefixMsg = false;
     /**
+     * If true, bot will send command output as chat messages.
+     */
+    public boolean sendCommandOutput = false;
+    /**
      * If true, bot will automatically navigate minigame menus (lobby selection, game start buttons).
      */
     public boolean autoJoin = false;

@@ -39,9 +39,13 @@ public class ShootArrowSimpleProjectileTask extends Task {
                 .anyMatch(mod.getItemStorage()::hasItemInventoryOnly);
     }
 
+    public static boolean hasShootingWeapon(AltoClef mod) {
+        return mod.getItemStorage().hasItemInventoryOnly(Items.BOW)
+                || mod.getItemStorage().hasItemInventoryOnly(Items.CROSSBOW);
+    }
+
     public static boolean readyForRanged(AltoClef mod) {
-        return hasArrows(mod) && (mod.getItemStorage().hasItemInventoryOnly(Items.BOW)
-                || mod.getItemStorage().hasItemInventoryOnly(Items.CROSSBOW));
+        return hasArrows(mod) && hasShootingWeapon(mod);
     }
 
     public static boolean checkRangedAttackTrajectory(AltoClef mod, Entity target) {

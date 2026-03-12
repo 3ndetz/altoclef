@@ -624,4 +624,79 @@ public class ItemHelper {
         return false;
     }
 
+    // --- Priority arrays for KitPVP/SkyWars armor and tool tiers (highest priority = index 0) ---
+
+    public static final net.minecraft.item.Item[] HelmetsTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_HELMET,
+        net.minecraft.item.Items.DIAMOND_HELMET,
+        net.minecraft.item.Items.IRON_HELMET,
+        net.minecraft.item.Items.CHAINMAIL_HELMET,
+        net.minecraft.item.Items.GOLDEN_HELMET,
+        net.minecraft.item.Items.LEATHER_HELMET
+    };
+    public static final net.minecraft.item.Item[] ChestplatesTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_CHESTPLATE,
+        net.minecraft.item.Items.DIAMOND_CHESTPLATE,
+        net.minecraft.item.Items.IRON_CHESTPLATE,
+        net.minecraft.item.Items.CHAINMAIL_CHESTPLATE,
+        net.minecraft.item.Items.GOLDEN_CHESTPLATE,
+        net.minecraft.item.Items.LEATHER_CHESTPLATE
+    };
+    public static final net.minecraft.item.Item[] LeggingsTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_LEGGINGS,
+        net.minecraft.item.Items.DIAMOND_LEGGINGS,
+        net.minecraft.item.Items.IRON_LEGGINGS,
+        net.minecraft.item.Items.CHAINMAIL_LEGGINGS,
+        net.minecraft.item.Items.GOLDEN_LEGGINGS,
+        net.minecraft.item.Items.LEATHER_LEGGINGS
+    };
+    public static final net.minecraft.item.Item[] BootsTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_BOOTS,
+        net.minecraft.item.Items.DIAMOND_BOOTS,
+        net.minecraft.item.Items.IRON_BOOTS,
+        net.minecraft.item.Items.CHAINMAIL_BOOTS,
+        net.minecraft.item.Items.GOLDEN_BOOTS,
+        net.minecraft.item.Items.LEATHER_BOOTS
+    };
+    public static final net.minecraft.item.Item[] SwordsTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_SWORD,
+        net.minecraft.item.Items.DIAMOND_SWORD,
+        net.minecraft.item.Items.IRON_SWORD,
+        net.minecraft.item.Items.GOLDEN_SWORD,
+        net.minecraft.item.Items.STONE_SWORD,
+        net.minecraft.item.Items.WOODEN_SWORD
+    };
+    public static final net.minecraft.item.Item[] AxesTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_AXE,
+        net.minecraft.item.Items.DIAMOND_AXE,
+        net.minecraft.item.Items.IRON_AXE,
+        net.minecraft.item.Items.GOLDEN_AXE,
+        net.minecraft.item.Items.STONE_AXE,
+        net.minecraft.item.Items.WOODEN_AXE
+    };
+    public static final net.minecraft.item.Item[] PickaxesTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_PICKAXE,
+        net.minecraft.item.Items.DIAMOND_PICKAXE,
+        net.minecraft.item.Items.IRON_PICKAXE,
+        net.minecraft.item.Items.GOLDEN_PICKAXE,
+        net.minecraft.item.Items.STONE_PICKAXE,
+        net.minecraft.item.Items.WOODEN_PICKAXE
+    };
+    public static final net.minecraft.item.Item[] ShovelsTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_SHOVEL,
+        net.minecraft.item.Items.DIAMOND_SHOVEL,
+        net.minecraft.item.Items.IRON_SHOVEL,
+        net.minecraft.item.Items.GOLDEN_SHOVEL,
+        net.minecraft.item.Items.STONE_SHOVEL,
+        net.minecraft.item.Items.WOODEN_SHOVEL
+    };
+    public static final net.minecraft.item.Item[] HoesTopPriority = new net.minecraft.item.Item[]{
+        net.minecraft.item.Items.NETHERITE_HOE,
+        net.minecraft.item.Items.DIAMOND_HOE,
+        net.minecraft.item.Items.IRON_HOE,
+        net.minecraft.item.Items.GOLDEN_HOE,
+        net.minecraft.item.Items.STONE_HOE,
+        net.minecraft.item.Items.WOODEN_HOE
+    };
+
 }
