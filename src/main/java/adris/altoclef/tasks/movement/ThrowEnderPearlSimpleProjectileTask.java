@@ -8,6 +8,7 @@ import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.time.TimerGame;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
@@ -22,6 +23,12 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
 
     public ThrowEnderPearlSimpleProjectileTask(BlockPos target) {
         _target = target;
+    }
+
+    public static boolean shouldEnderpearl(AltoClef mod, Entity target) {
+        if (!mod.getItemStorage().hasItem(Items.ENDER_PEARL)) return false;
+        double distSq = mod.getPlayer().squaredDistanceTo(target);
+        return distSq > 5 * 5 && distSq < 100 * 100;
     }
 
     private static boolean cleanThrow(AltoClef mod, float yaw, float pitch) {

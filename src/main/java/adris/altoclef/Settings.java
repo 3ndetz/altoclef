@@ -527,6 +527,16 @@ public class Settings implements IFailableConfigFile {
         return false;
     }
 
+    /**
+     * Port for the Py4j gateway server (Python bridge).
+     * Python callback server listens on port + 1.
+     */
+    private int pythonGatewayPort = 25333;
+
+    public int getPythonGatewayPort() {
+        return pythonGatewayPort;
+    }
+
     public boolean isAutoRespawn() {
         return autoRespawn;
     }

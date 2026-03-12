@@ -1,6 +1,7 @@
 package adris.altoclef;
 
 import adris.altoclef.commands.*;
+import adris.altoclef.commands.multiplayer.*;
 import adris.altoclef.commands.random.ScanCommand;
 import adris.altoclef.commands.random.DummyTaskCommand;
 import adris.altoclef.commandsystem.exception.CommandException;
@@ -39,7 +40,20 @@ public class AltoClefCommands {
                 new DummyTaskCommand(),
                 new FollowCommand(),
                 new ScanCommand(),
-                new GiveCommand()
+                new GiveCommand(),
+                // Multiplayer commands
+                new AvoidCommand(),
+                new CombatCommand(),
+                new PursueCommand(),
+                new ConnectCommand(),
+                new SignCommand(),
+                new GraveCommand(),
+                new GameCommand(),
+                new NickCommand(),
+                new CheckPlayerCommand(),
+                new PearlCommand(),
+                new ForgetCommand(),
+                new BuildCommand()
         );
     }
 }

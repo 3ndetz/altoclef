@@ -5,6 +5,8 @@ import adris.altoclef.util.slots.Slot;
 import baritone.altoclef.AltoClefSettings;
 import baritone.api.Settings;
 import baritone.api.utils.RayTraceUtils;
+import baritone.api.utils.Rotation;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -186,6 +188,17 @@ public class BotBehaviour {
         // Not needed, nothing changes.
         // current.applyState()
     }
+
+    // --- Camera modifiers (stubs for Phase 4 EpicCamera integration) ---
+    public void setCameraRotationModifer(Rotation rotation) { /* Phase 4: EpicCamera stub */ }
+    public void setCameraRotationModifer(float pitch) { /* Phase 4: EpicCamera stub */ }
+    public void resetCameraRotationModifer() { /* Phase 4: EpicCamera stub */ }
+    public void setCameraPositionModifer(Vec3d pos) { /* Phase 4: EpicCamera stub */ }
+    public void resetCameraPositionModifer() { /* Phase 4: EpicCamera stub */ }
+
+    // --- User task chain priority ---
+    public void setUserTaskChainPriority(float priority) { /* stub */ }
+    public void setDefaultUserTaskChainPriority() { /* stub */ }
 
     public void allowSwimThroughLava(boolean allow) {
         current().swimThroughLava = allow;

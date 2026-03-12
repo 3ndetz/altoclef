@@ -34,6 +34,28 @@ public class ShootArrowSimpleProjectileTask extends Task {
         shooting = false;
     }
 
+    public static boolean hasArrows(AltoClef mod) {
+        return Arrays.stream(new Item[]{Items.ARROW, Items.SPECTRAL_ARROW, Items.TIPPED_ARROW})
+                .anyMatch(mod.getItemStorage()::hasItemInventoryOnly);
+    }
+
+    public static boolean readyForRanged(AltoClef mod) {
+        return hasArrows(mod) && (mod.getItemStorage().hasItemInventoryOnly(Items.BOW)
+                || mod.getItemStorage().hasItemInventoryOnly(Items.CROSSBOW));
+    }
+
+    public static boolean checkRangedAttackTrajectory(AltoClef mod, Entity target) {
+        Vec3d playerPos = mod.getPlayer().getEyePos();
+        Vec3d targetPos = target.getEyePos();
+        double distance = playerPos.distanceTo(targetPos);
+        if (distance > 100) return false;
+        return LookHelper.cleanLineOfSight(target.getEyePos(), distance);
+    }
+
+    public static boolean canUseRanged(AltoClef mod, Entity target) {
+        return readyForRanged(mod) && checkRangedAttackTrajectory(mod, target);
+    }
+
     private static Rotation calculateThrowLook(AltoClef mod, Entity target) {
         // Velocity based on bow charge.
         float velocity = (mod.getPlayer().getItemUseTime() - mod.getPlayer().getItemUseTimeLeft()) / 20f;

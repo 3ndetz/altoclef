@@ -3,7 +3,6 @@ package adris.altoclef;
 
 import adris.altoclef.butler.Butler;
 import adris.altoclef.chains.*;
-import adris.altoclef.trackers.BlockScanner;
 import adris.altoclef.commandsystem.CommandExecutor;
 import adris.altoclef.commandsystem.TabCompleter;
 import adris.altoclef.control.InputControls;
@@ -20,6 +19,8 @@ import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.trackers.*;
+import adris.altoclef.trackers.BlockScanner;
+import adris.altoclef.trackers.DamageTracker;
 import adris.altoclef.trackers.storage.ContainerSubTracker;
 import adris.altoclef.trackers.storage.ItemStorageTracker;
 import adris.altoclef.ui.AltoClefTickChart;
@@ -27,6 +28,7 @@ import adris.altoclef.ui.CommandStatusOverlay;
 import adris.altoclef.ui.MessagePriority;
 import adris.altoclef.ui.MessageSender;
 import adris.altoclef.util.helpers.InputHelper;
+import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import baritone.Baritone;
 import baritone.altoclef.AltoClefSettings;
@@ -40,6 +42,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import org.lwjgl.glfw.GLFW;
+import py4j.GatewayServer;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -71,6 +74,7 @@ public class AltoClef implements ModInitializer {
     private SimpleChunkTracker chunkTracker;
     private MiscBlockTracker miscBlockTracker;
     private CraftingRecipeTracker craftingRecipeTracker;
+    private DamageTracker damageTracker;
     // Renderers
     private CommandStatusOverlay commandStatusOverlay;
     private AltoClefTickChart altoClefTickChart;
@@ -91,6 +95,10 @@ public class AltoClef implements ModInitializer {
     // Pipeline (multiplayer game mode)
     private static adris.altoclef.util.agent.Pipeline _pipeline = adris.altoclef.util.agent.Pipeline.None;
 
+    // Py4j bridge
+    private Py4jEntryPoint _py4jEntryPoint = null;
+    private GatewayServer _gatewayServer = null;
+
     public static adris.altoclef.util.agent.Pipeline getPipeline() {
         return _pipeline;
     }
@@ -99,9 +107,50 @@ public class AltoClef implements ModInitializer {
         _pipeline = pipeline;
     }
 
-    // Python sender stub (full implementation in Phase 4)
-    public Object getInfoSender() {
+    public Py4jEntryPoint getInfoSender() {
+        return _py4jEntryPoint;
+    }
+
+    public GatewayServer getGateway() {
+        return _gatewayServer;
+    }
+
+    public DamageTracker getDamageTracker() {
+        return damageTracker;
+    }
+
+    public Task getCurrentTask() {
+        if (getUserTaskChain() != null) {
+            return getUserTaskChain().getCurrentTask();
+        }
         return null;
+    }
+
+    public void initializePythonSender() {
+        _py4jEntryPoint = new Py4jEntryPoint(this);
+        final int JAVA_GATEWAY_PORT = getModSettings().getPythonGatewayPort();
+        final int PYTHON_CALLBACK_PORT = getModSettings().getPythonGatewayPort() + 1;
+        _gatewayServer = new GatewayServer(
+                _py4jEntryPoint,
+                JAVA_GATEWAY_PORT,
+                PYTHON_CALLBACK_PORT,
+                GatewayServer.DEFAULT_CONNECT_TIMEOUT,
+                GatewayServer.DEFAULT_READ_TIMEOUT,
+                null
+        );
+        _gatewayServer.start();
+        _py4jEntryPoint.InitPythonCallback();
+        Debug.logMessage("Py4j gateway started on port " + JAVA_GATEWAY_PORT);
+    }
+
+    public void stopPythonSender() {
+        if (_gatewayServer != null) _gatewayServer.shutdown();
+    }
+
+    public void reloadPythonSender() {
+        stopPythonSender();
+        _gatewayServer = null;
+        initializePythonSender();
     }
 
     public static String getSelfName() {
@@ -169,6 +218,7 @@ public class AltoClef implements ModInitializer {
         chunkTracker = new SimpleChunkTracker(this);
         miscBlockTracker = new MiscBlockTracker(this);
         craftingRecipeTracker = new CraftingRecipeTracker(trackerManager);
+        damageTracker = new DamageTracker(trackerManager);
 
         // Renderers
         commandStatusOverlay = new CommandStatusOverlay();
@@ -200,6 +250,9 @@ public class AltoClef implements ModInitializer {
             getExtraBaritoneSettings().avoidBlockBreak(blockPos -> settings.isPositionExplicitlyProtected(blockPos));
             getExtraBaritoneSettings().avoidBlockPlace(blockPos -> settings.isPositionExplicitlyProtected(blockPos));
             getExtraBaritoneSettings().getForceSaveToolPredicates().add((state, item) -> StorageHelper.shouldSaveStack(this, state.getBlock(), item));
+
+            // Initialize Python sender after settings are loaded (needs getPythonGatewayPort())
+            initializePythonSender();
         });
 
         // Receive + cancel chat
@@ -250,7 +303,12 @@ public class AltoClef implements ModInitializer {
         miscBlockTracker.tick();
         trackerManager.tick();
         blockScanner.tick();
+        damageTracker.tick();
         taskRunner.tick();
+
+        if (inGame()) {
+            LookHelper.updateWindMouseRotation(this);
+        }
 
         if (taskRunner.gameMenuTaskChain != null) {
             taskRunner.gameMenuTaskChain.onTickPost(this);

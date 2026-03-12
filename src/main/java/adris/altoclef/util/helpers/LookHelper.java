@@ -715,4 +715,179 @@ public interface LookHelper {
         return toEntity.normalize().dotProduct(rotationFrom);
     }
 
+    // --- Smooth look methods (ported from autoclef) ---
+
+    static void lookAtForced(AltoClef mod, Rotation rotation) {
+        mod.getInputControls().forceLook(rotation.getYaw(), rotation.getPitch());
+    }
+
+    public static float normalizeAngle(float angle) {
+        angle = angle % 360.0f;
+        if (angle >= 180.0f) angle -= 360.0f;
+        else if (angle < -180.0f) angle += 360.0f;
+        return angle;
+    }
+
+    public static float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    public static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    public static Vec3d getClosestPointOnBoundingBox(Vec3d playerPos, Box boundingBox) {
+        double closestX = clamp(playerPos.x, boundingBox.minX, boundingBox.maxX);
+        double closestY = clamp(playerPos.y, boundingBox.minY, boundingBox.maxY);
+        double closestZ = clamp(playerPos.z, boundingBox.minZ, boundingBox.maxZ);
+        return new Vec3d(closestX, closestY, closestZ);
+    }
+
+    public static Vec3d getClosestPointOnEntityHitbox(AltoClef mod, Entity entity) {
+        return getClosestPointOnBoundingBox(mod.getPlayer().getEyePos(), entity.getBoundingBox());
+    }
+
+    public static boolean canHitEntity(AltoClef mod, Entity entity, float range) {
+        Vec3d closestPoint = getClosestPointOnEntityHitbox(mod, entity);
+        double distance = mod.getPlayer().getPos().distanceTo(entity.getPos());
+        return cleanLineOfSight(closestPoint, distance) && distance < range;
+    }
+
+    public static boolean canHitEntity(AltoClef mod, Entity entity) {
+        return canHitEntity(mod, entity, 4.5f);
+    }
+
+    public static Vec3d getOptimalAimPoint(AltoClef mod, Entity entity) {
+        Vec3d closestPoint = getClosestPointOnEntityHitbox(mod, entity);
+        double distanceSq = mod.getPlayer().getEyePos().squaredDistanceTo(closestPoint);
+        if (distanceSq < 4.0) {
+            closestPoint = closestPoint.add(0, 0.3 * (1.0 - distanceSq / 4.0), 0);
+        }
+        return closestPoint;
+    }
+
+    public static boolean isLookingAtEntity(AltoClef mod, Entity entity, double maxDistance, double precision) {
+        if (entity == null || !entity.isAlive()) return false;
+        Vec3d eyePos = mod.getPlayer().getEyePos();
+        Vec3d lookVec = mod.getPlayer().getRotationVec(1.0F);
+        Box entityBox = entity.getBoundingBox();
+        Vec3d ray = lookVec.multiply(maxDistance);
+        Optional<Vec3d> hitOptional = entityBox.raycast(eyePos, eyePos.add(ray));
+        if (hitOptional.isEmpty()) return false;
+        Vec3d hitPoint = hitOptional.get();
+        Rotation hitRotation = getLookRotation(mod, hitPoint);
+        Rotation currentRotation = getLookRotation(mod.getPlayer());
+        float yawDiff = Math.abs(normalizeAngle(hitRotation.getYaw() - currentRotation.getYaw()));
+        float pitchDiff = Math.abs(hitRotation.getPitch() - currentRotation.getPitch());
+        return yawDiff <= precision && pitchDiff <= precision;
+    }
+
+    public static boolean isLookingAtEntity(AltoClef mod, Entity entity) {
+        return isLookingAtEntity(mod, entity, 6.0, 2.0);
+    }
+
+    // WindMouse smooth look state
+    public static class WindMouseState {
+        public static boolean isRotating = false;
+        public static double windX = 0, windY = 0, veloX = 0, veloY = 0;
+        public static Rotation targetRotation = null;
+        public static Entity targetEntity = null;
+        public static float speed = 1.0f;
+        public static long lastUpdateTime = System.currentTimeMillis();
+        public static long lastUpdateTimeInternal = System.currentTimeMillis();
+        public static final long ROTATION_TIMEOUT = 1000;
+    }
+
+    private static void smoothLookInternal(AltoClef mod, Rotation targetRot, Entity targetEntity, float speed) {
+        WindMouseState.isRotating = true;
+        WindMouseState.targetEntity = targetEntity;
+        WindMouseState.targetRotation = targetRot;
+        WindMouseState.speed = speed;
+        WindMouseState.lastUpdateTime = System.currentTimeMillis();
+    }
+
+    public static boolean updateWindMouseRotation(AltoClef mod) {
+        long currentTime = System.currentTimeMillis();
+        if (!WindMouseState.isRotating) return true;
+        if (currentTime - WindMouseState.lastUpdateTime > WindMouseState.ROTATION_TIMEOUT) {
+            WindMouseState.isRotating = false;
+            WindMouseState.windX = 0; WindMouseState.windY = 0;
+            WindMouseState.veloX = 0; WindMouseState.veloY = 0;
+            return true;
+        }
+        if (WindMouseState.targetEntity != null && WindMouseState.targetEntity.isAlive()) {
+            WindMouseState.targetRotation = getLookRotation(mod, getClosestPointOnEntityHitbox(mod, WindMouseState.targetEntity));
+        }
+        if (WindMouseState.targetRotation == null) return false;
+        double timeDelta = (currentTime - WindMouseState.lastUpdateTimeInternal) / 1000.0 * WindMouseState.speed;
+        WindMouseState.lastUpdateTimeInternal = currentTime;
+
+        Rotation currentRotation = getLookRotation();
+        double deltaYaw = normalizeAngle(WindMouseState.targetRotation.getYaw() - currentRotation.getYaw());
+        double deltaPitch = WindMouseState.targetRotation.getPitch() - currentRotation.getPitch();
+        double distanceToTarget = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch);
+        if (distanceToTarget < 0.01) { WindMouseState.isRotating = false; return true; }
+
+        double baseWind = 1000, baseGravity = 8000, baseMaxStep = 1000000;
+        double actualWind = baseWind * timeDelta, actualGravity = baseGravity * timeDelta, actualMaxStep = baseMaxStep * timeDelta;
+        WindMouseState.windX = WindMouseState.windX / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
+        WindMouseState.windY = WindMouseState.windY / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
+        WindMouseState.veloX += WindMouseState.windX + deltaYaw * actualGravity;
+        WindMouseState.veloY += WindMouseState.windY + deltaPitch * actualGravity;
+        double veloMag = Math.sqrt(WindMouseState.veloX * WindMouseState.veloX + WindMouseState.veloY * WindMouseState.veloY);
+        if (veloMag > actualMaxStep) {
+            double randomDist = actualMaxStep / 2.0 + (Math.random() * actualMaxStep) / 2;
+            WindMouseState.veloX = (WindMouseState.veloX / veloMag) * randomDist;
+            WindMouseState.veloY = (WindMouseState.veloY / veloMag) * randomDist;
+        }
+        if (distanceToTarget < 2) {
+            WindMouseState.veloX *= Math.pow(0.3, timeDelta * 60);
+            WindMouseState.veloY *= Math.pow(0.3, timeDelta * 60);
+        }
+        double moveX = WindMouseState.veloX * timeDelta;
+        double moveY = WindMouseState.veloY * timeDelta;
+        lookAtForced(mod, new Rotation(normalizeAngle(currentRotation.getYaw() + (float)moveX), clamp((float)currentRotation.getPitch() + (float)moveY, -90f, 90f)));
+        return false;
+    }
+
+    public static void smoothLook(AltoClef mod, Entity entity) {
+        Rotation targetRot = getLookRotation(mod, getClosestPointOnEntityHitbox(mod, entity));
+        smoothLookInternal(mod, targetRot, entity, 1.0f);
+    }
+
+    public static void smoothLook(AltoClef mod, Entity entity, float speed) {
+        Rotation targetRot = getLookRotation(mod, getClosestPointOnEntityHitbox(mod, entity));
+        smoothLookInternal(mod, targetRot, entity, speed);
+    }
+
+    public static void smoothLook(AltoClef mod, Vec3d pos) {
+        smoothLookInternal(mod, getLookRotation(mod, pos), null, 1.0f);
+    }
+
+    public static void smoothLook(AltoClef mod, Rotation targetRot, float speed) {
+        smoothLookInternal(mod, targetRot, null, speed);
+    }
+
+    public static void smoothLook(AltoClef mod, Rotation targetRot) {
+        smoothLook(mod, targetRot, 1.0f);
+    }
+
+    public static void smoothLookAt(AltoClef mod, Vec3d position, float speed) {
+        smoothLook(mod, getLookRotation(mod, position), speed);
+    }
+
+    public static void smoothLookAt(AltoClef mod, Vec3d position) {
+        smoothLookAt(mod, position, 1.0f);
+    }
+
+    public static void smoothLookAt(AltoClef mod, Entity entity) {
+        smoothLookAt(mod, entity.getEyePos(), 1.0f);
+    }
+
+    public static void randomOrientation(AltoClef mod) {
+        float randomRotationX = (float)(Math.random() * 360f);
+        float randomRotationY = -90 + (float)(Math.random() * 180f);
+        smoothLook(mod, new Rotation(randomRotationX, randomRotationY));
+    }
+
 }
