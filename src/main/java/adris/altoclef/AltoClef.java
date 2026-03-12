@@ -88,6 +88,22 @@ public class AltoClef implements ModInitializer {
 
     private static AltoClef instance;
 
+    // Pipeline (multiplayer game mode)
+    private static adris.altoclef.util.agent.Pipeline _pipeline = adris.altoclef.util.agent.Pipeline.None;
+
+    public static adris.altoclef.util.agent.Pipeline getPipeline() {
+        return _pipeline;
+    }
+
+    public static void setPipeline(adris.altoclef.util.agent.Pipeline pipeline) {
+        _pipeline = pipeline;
+    }
+
+    // Python sender stub (full implementation in Phase 4)
+    public Object getInfoSender() {
+        return null;
+    }
+
     // Are we in game (playing in a server/world)
     public static boolean inGame() {
         return MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().getNetworkHandler() != null;

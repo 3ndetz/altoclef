@@ -2,6 +2,7 @@ package adris.altoclef.tasksystem;
 
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
+import adris.altoclef.chains.GameMenuTaskChain;
 
 import java.util.ArrayList;
 
@@ -12,6 +13,7 @@ public class TaskRunner {
     private boolean active;
 
     private TaskChain cachedCurrentTaskChain = null;
+    public GameMenuTaskChain gameMenuTaskChain = null;
 
     public String statusReport = " (no chain running) ";
 
@@ -21,7 +23,16 @@ public class TaskRunner {
     }
 
     public void tick() {
-        if (!active || !AltoClef.inGame()) {
+        if (!active) {
+            statusReport = " (no chain running) ";
+            return;
+        }
+        if (!AltoClef.inGame()) {
+            // Run menu chain even when not in game (handles reconnects, death screen, etc.)
+            if (gameMenuTaskChain != null) {
+                gameMenuTaskChain.getPriority();
+                gameMenuTaskChain.tick();
+            }
             statusReport = " (no chain running) ";
             return;
         }
@@ -42,7 +53,7 @@ public class TaskRunner {
         }
         cachedCurrentTaskChain = maxChain;
         if (maxChain != null) {
-            statusReport = "Chain: "+maxChain.getName() + ", priority: "+maxPriority;
+            statusReport = "Chain: " + maxChain.getName() + ", priority: " + maxPriority;
             maxChain.tick();
         } else {
             statusReport = " (no chain running) ";
@@ -50,6 +61,9 @@ public class TaskRunner {
     }
 
     public void addTaskChain(TaskChain chain) {
+        if (chain instanceof GameMenuTaskChain menuChain) {
+            gameMenuTaskChain = menuChain;
+        }
         chains.add(chain);
     }
 

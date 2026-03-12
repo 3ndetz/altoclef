@@ -117,6 +117,10 @@ dependencies {
     // Nether pathfinder
     implementation 'dev.babbaj:nether-pathfinder:1.5'
 
+    // Py4j (Python bridge)
+    implementation 'net.sf.py4j:py4j:0.10.9.7'
+    shadow('net.sf.py4j:py4j:0.10.9.7')
+
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
     shadow('com.fasterxml.jackson.core:jackson-core:2.16.0')

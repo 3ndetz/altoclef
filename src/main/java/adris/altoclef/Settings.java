@@ -523,6 +523,10 @@ public class Settings implements IFailableConfigFile {
         return autoReconnect;
     }
 
+    public boolean shouldReloadInfoSender() {
+        return false;
+    }
+
     public boolean isAutoRespawn() {
         return autoRespawn;
     }

@@ -2,6 +2,8 @@ package adris.altoclef.util.helpers;
 
 import adris.altoclef.AltoClef;
 import adris.altoclef.multiversion.BlockTagVer;
+import adris.altoclef.util.slots.Slot;
+import baritone.api.utils.input.Input;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.multiversion.versionedfields.Items;
@@ -514,6 +516,48 @@ public class ItemHelper {
         public boolean isNetherWood() {
             return planks == Items.CRIMSON_PLANKS || planks == Items.WARPED_PLANKS;
         }
+    }
+
+    // --- Multiplayer helpers (ported from autoclef) ---
+
+    /**
+     * Clicks a custom-named item in the current screen by name match.
+     */
+    public static boolean clickCustomItem(AltoClef mod, String... joinItems) {
+        Slot newGameSlot = getCustomItemSlot(mod, joinItems);
+        if (newGameSlot != null) {
+            mod.getSlotHandler().forceEquipSlot(newGameSlot);
+            LookHelper.tryAvoidingInteractable(mod);
+            mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Finds a slot in the current screen containing an item with a matching custom name.
+     */
+    public static Slot getCustomItemSlot(AltoClef mod, String... checkItemName) {
+        Iterable<Slot> slots = Slot.getCurrentScreenSlots();
+        if (!AltoClef.inGame() || mod.getPlayer() == null || slots == null) return null;
+        for (Slot slot : slots) {
+            net.minecraft.item.ItemStack item = StorageHelper.getItemStackInSlot(slot);
+            if (item != null && !item.isEmpty()) {
+                if (item.hasCustomName()) {
+                    String itemCustomName = removeMCFormatCodes(item.getName().getString().toLowerCase());
+                    for (String check : checkItemName) {
+                        if (check.toLowerCase().equals(itemCustomName) || check.toLowerCase().contains(itemCustomName)) {
+                            return slot;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String removeMCFormatCodes(String text) {
+        return text.replaceAll("§[0-9a-fk-or]", "");
     }
 
 }
