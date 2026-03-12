@@ -45,6 +45,22 @@ public class MessageSender {
         }
     }
 
+    public void sendChatInstant(String message) {
+        if (MinecraftClient.getInstance().player == null) {
+            Debug.logError("Failed to send chat message as no client loaded.");
+            return;
+        }
+        PlayerVer.sendChatMessage(MinecraftClient.getInstance().player, message);
+    }
+
+    public void sendCmdInstant(String command) {
+        if (MinecraftClient.getInstance().player == null) {
+            Debug.logError("Failed to send command as no client loaded.");
+            return;
+        }
+        PlayerVer.sendChatCommand(MinecraftClient.getInstance().player, command);
+    }
+
     public void enqueueWhisper(String username, String message, MessagePriority priority) {
         var player = MinecraftClient.getInstance().player;
         if (player != null && username.equals(player.getName().getString())) return;

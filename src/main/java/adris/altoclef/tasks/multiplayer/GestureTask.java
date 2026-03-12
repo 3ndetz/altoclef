@@ -173,7 +173,9 @@ public class GestureTask extends Task {
             }
         } else if (_gesture.equals(Gesture.Disagree)) {
             if (_phase == 0) {
-                Rotation newRot = new Rotation(50, mod.getPlayer().getPitch());
+                // Shake head left: offset +50 from current yaw (relative, not absolute)
+                float targetYaw = LookHelper.normalizeAngle(mod.getPlayer().getYaw() + 50);
+                Rotation newRot = new Rotation(targetYaw, mod.getPlayer().getPitch());
                 LookHelper.smoothLook(mod, newRot, 0.2f);
             } else {
                 LookHelper.smoothLookAt(mod, lookTarget, 0.4f);

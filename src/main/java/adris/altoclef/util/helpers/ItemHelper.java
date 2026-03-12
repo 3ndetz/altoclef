@@ -42,6 +42,12 @@ public class ItemHelper {
             Items.NETHER_STAR, Items.COAL, Items.WITHER_SKELETON_SKULL, Items.GHAST_TEAR, Items.IRON_INGOT,
             Items.CARROT, Items.POTATO, Items.BAKED_POTATO, Items.COPPER_INGOT};
     public static final Item[] DIRTS = new Item[]{Items.DIRT, Items.DIRT_PATH, Items.COARSE_DIRT, Items.ROOTED_DIRT};
+    public static final Item[] COPPER_BLOCKS = new Item[]{Items.COPPER_BLOCK, Items.EXPOSED_COPPER,
+            Items.WEATHERED_COPPER, Items.OXIDIZED_COPPER, Items.CUT_COPPER, Items.EXPOSED_CUT_COPPER,
+            Items.WEATHERED_CUT_COPPER, Items.OXIDIZED_CUT_COPPER, Items.WAXED_COPPER_BLOCK,
+            Items.WAXED_EXPOSED_COPPER, Items.WAXED_WEATHERED_COPPER, Items.WAXED_OXIDIZED_COPPER,
+            Items.WAXED_CUT_COPPER, Items.WAXED_EXPOSED_CUT_COPPER, Items.WAXED_WEATHERED_CUT_COPPER,
+            Items.WAXED_OXIDIZED_CUT_COPPER};
     public static final Item[] PLANKS = new Item[]{Items.ACACIA_PLANKS, Items.BIRCH_PLANKS, Items.CRIMSON_PLANKS,
             Items.DARK_OAK_PLANKS, Items.OAK_PLANKS, Items.JUNGLE_PLANKS, Items.SPRUCE_PLANKS, Items.WARPED_PLANKS,
             Items.MANGROVE_PLANKS, Items.CHERRY_PLANKS, Items.BAMBOO_PLANKS};

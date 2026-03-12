@@ -11,8 +11,10 @@ import java.util.regex.Pattern;
 public class WhisperChecker {
 
     private static final TimerGame _repeatTimer = new TimerGame(0.1);
+    private static final TimerGame _whisperRepeatTimer = new TimerGame(0.1);
 
     private static String _lastMessage = null;
+    private static String _lastWhisperMessage = null;
 
     public boolean isVanillaWhisperMessage(String message) {
         return message.matches("^\\[\\w+\\] whispers to you:.*") ||
@@ -198,12 +200,14 @@ public class WhisperChecker {
     }
 
     public MessageResult receiveMessage(AltoClef mod, String ourUsername, String msg) {
-        boolean duplicate = msg.equals(_lastMessage);
-        if (duplicate && !_repeatTimer.elapsed()) {
-            _repeatTimer.reset();
+        // Use a separate dedup tracker so that receiveChat() and receiveMessage()
+        // don't interfere with each other when called on the same message.
+        boolean duplicate = msg.equals(_lastWhisperMessage);
+        if (duplicate && !_whisperRepeatTimer.elapsed()) {
+            _whisperRepeatTimer.reset();
             return null;
         }
-        _lastMessage = msg;
+        _lastWhisperMessage = msg;
 
         for (String format : ButlerConfig.getInstance().whisperFormats) {
             MessageResult check = tryParse(ourUsername, format, msg);

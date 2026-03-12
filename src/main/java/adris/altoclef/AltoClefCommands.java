@@ -66,7 +66,8 @@ public class AltoClefCommands {
                 new CheckPlayerCommand(),
                 new PearlCommand(),
                 new ForgetCommand(),
-                new BuildCommand()
+                new BuildCommand(),
+                new CheckBlockCommand()
         );
     }
 }

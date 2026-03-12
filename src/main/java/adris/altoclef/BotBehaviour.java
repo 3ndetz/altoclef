@@ -189,12 +189,16 @@ public class BotBehaviour {
         // current.applyState()
     }
 
-    // --- Camera modifiers (stubs for Phase 4 EpicCamera integration) ---
-    public void setCameraRotationModifer(Rotation rotation) { /* Phase 4: EpicCamera stub */ }
-    public void setCameraRotationModifer(float pitch) { /* Phase 4: EpicCamera stub */ }
-    public void resetCameraRotationModifer() { /* Phase 4: EpicCamera stub */ }
-    public void setCameraPositionModifer(Vec3d pos) { /* Phase 4: EpicCamera stub */ }
-    public void resetCameraPositionModifer() { /* Phase 4: EpicCamera stub */ }
+    // --- Camera modifiers (EpicCamera integration) ---
+    public void setCameraRotationModifer(Rotation rotation) { AltoClef._cameraRotationModifer = rotation; }
+    public void setCameraRotationModifer(float pitch) {
+        Rotation current = AltoClef._cameraRotationModifer;
+        float yaw = current != null ? current.getYaw() : -500;
+        AltoClef._cameraRotationModifer = new Rotation(yaw, pitch);
+    }
+    public void resetCameraRotationModifer() { AltoClef._cameraRotationModifer = null; }
+    public void setCameraPositionModifer(Vec3d pos) { AltoClef._cameraPositionModifer = pos; }
+    public void resetCameraPositionModifer() { AltoClef._cameraPositionModifer = null; }
 
     // --- User task chain priority ---
     private float _userTaskChainPriority = 50;

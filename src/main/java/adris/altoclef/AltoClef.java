@@ -56,6 +56,29 @@ public class AltoClef implements ModInitializer {
     // Static access to altoclef
     private static final Queue<Consumer<AltoClef>> _postInitQueue = new ArrayDeque<>();
 
+    // Camera modifier statics (used by CameraMixin / EpicCamera)
+    public static baritone.api.utils.Rotation _cameraRotationModifer = null;
+    public static net.minecraft.util.math.Vec3d _cameraPositionModifer = null;
+
+    public static baritone.api.utils.Rotation getCameraRotationModifer() {
+        return _cameraRotationModifer;
+    }
+    public static void setCameraRotationModifer(baritone.api.utils.Rotation rotation) {
+        _cameraRotationModifer = rotation;
+    }
+    public static void resetCameraRotationModifer() {
+        _cameraRotationModifer = null;
+    }
+    public static net.minecraft.util.math.Vec3d getCameraPositionModifer() {
+        return _cameraPositionModifer;
+    }
+    public static void setCameraPositionModifer(net.minecraft.util.math.Vec3d pos) {
+        _cameraPositionModifer = pos;
+    }
+    public static void resetCameraPositionModifer() {
+        _cameraPositionModifer = null;
+    }
+
     // Central Managers
     private static CommandExecutor commandExecutor;
     private TaskRunner taskRunner;

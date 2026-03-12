@@ -28,6 +28,7 @@
     "WorldBlockModifiedMixin"
   ],
   "client": [
+    "CameraMixin",
     "ChatInputMixin",
     "ChatInputSuggestorMixin",
     "ChatReadMixin",

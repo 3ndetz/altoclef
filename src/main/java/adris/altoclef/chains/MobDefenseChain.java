@@ -6,11 +6,16 @@ import adris.altoclef.control.KillAura;
 import adris.altoclef.multiversion.versionedfields.Entities;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.tasks.construction.ProjectileProtectionWallTask;
+import adris.altoclef.tasksystem.Task;
+import adris.altoclef.tasks.entity.CombatTask;
 import adris.altoclef.tasks.entity.KillEntitiesTask;
 import adris.altoclef.tasks.movement.CustomBaritoneGoalTask;
 import adris.altoclef.tasks.movement.DodgeProjectilesTask;
+import adris.altoclef.tasks.movement.IdleTask;
 import adris.altoclef.tasks.movement.RunAwayFromCreepersTask;
+import adris.altoclef.tasks.movement.RunAwayFromEntitiesTask;
 import adris.altoclef.tasks.movement.RunAwayFromHostilesTask;
+import adris.altoclef.util.time.TimerGame;
 import adris.altoclef.tasks.speedrun.DragonBreathTracker;
 import adris.altoclef.tasksystem.TaskRunner;
 import adris.altoclef.util.baritone.CachedProjectile;
@@ -65,6 +70,9 @@ public class MobDefenseChain extends SingleTaskChain {
     private float prevHealth = 20;
     private boolean needsChangeOnAttack = false;
     private Entity lockedOnEntity = null;
+    // Player threat tracking (ported from autoclef)
+    public Task _killTask = null;
+    private final TimerGame _runAwayTimer = new TimerGame(2);
 
     private float cachedLastPriority;
 
@@ -267,6 +275,27 @@ public class MobDefenseChain extends SingleTaskChain {
                 setTask(runAwayTask);
                 return 70;
             }
+        }
+
+        // Player threat: avoid threatening players
+        Optional<Entity> avoidTarget = getAvoidTarget(mod);
+        if (avoidTarget.isPresent()) {
+            if (!LookHelper.WindMouseState.isRotating) {
+                Entity avoid = avoidTarget.get();
+                runAwayTask = new RunAwayFromPlayersTask(avoid, SAFE_KEEP_DISTANCE + 5);
+                setTask(runAwayTask);
+                return 55;
+            }
+        }
+
+        // Player threat: attack players marked for attack
+        Optional<Entity> toAttackPlayer = getAttackPlayer(mod);
+        if (toAttackPlayer.isPresent() && toAttackPlayer.get() instanceof PlayerEntity player) {
+            _killTask = new CombatTask(player.getName().getString(), false, true);
+            setTask(_killTask);
+            return 65;
+        } else {
+            _killTask = null;
         }
 
         if (mod.getModSettings().shouldDealWithAnnoyingHostiles()) {
@@ -598,6 +627,91 @@ public class MobDefenseChain extends SingleTaskChain {
             }
         }
         return false;
+    }
+
+    // --- Player threat helpers (ported from autoclef) ---
+
+    public Optional<Entity> getAvoidTarget(AltoClef mod) {
+        try {
+            return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+                    entity -> {
+                        if (entity == null) return false;
+                        if (mod.getPlayer() != null
+                                && entity.distanceTo(mod.getPlayer()) > SAFE_KEEP_DISTANCE) return false;
+                        if (targetEntity != null && entity == targetEntity) return false;
+                        if (entity.getName() == null) return false;
+                        String playerName = entity.getName().getString();
+                        return mod.getDamageTracker().getThreatTable().shouldAvoid(playerName)
+                                && !mod.getDamageTracker().getThreatTable().shouldAttack(playerName);
+                    },
+                    PlayerEntity.class);
+        } catch (Exception e) {
+            Debug.logWarning("Weird multithread exception in getAvoidTarget: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Entity> getAttackPlayer(AltoClef mod) {
+        try {
+            return mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),
+                    entity -> entity != null
+                            && entity.getName() != null
+                            && entity.distanceTo(mod.getPlayer()) < DANGER_KEEP_DISTANCE
+                            && mod.getEntityTracker().isEntityReachable(entity)
+                            && mod.getEntityTracker().isPlayerLoaded(entity.getName().getString())
+                            && mod.getDamageTracker().getThreatTable().shouldAttack(entity.getName().getString()),
+                    PlayerEntity.class);
+        } catch (Exception e) {
+            Debug.logWarning("Weird multithread exception in getAttackPlayer: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Runs away from a single threatening player entity until distance is sufficient.
+     */
+    public static class RunAwayFromPlayersTask extends RunAwayFromEntitiesTask {
+        private final Entity _avoidEntity;
+        private final double _distanceToRun;
+        private boolean _finished = false;
+
+        public RunAwayFromPlayersTask(Entity toRunAwayFrom, double distanceToRun) {
+            super(() -> List.of(toRunAwayFrom), distanceToRun, true, 0.1);
+            _avoidEntity = toRunAwayFrom;
+            _distanceToRun = distanceToRun;
+        }
+
+        @Override
+        protected Task onTick() {
+            AltoClef mod = AltoClef.getInstance();
+            if (_avoidEntity != null && mod != null) {
+                if (_avoidEntity.distanceTo(mod.getPlayer()) >= _distanceToRun) {
+                    _finished = true;
+                } else {
+                    _finished = false;
+                    return super.onTick();
+                }
+            }
+            setDebugState("NO RUNAWAY TARGET / MAYBE BUG");
+            return new IdleTask();
+        }
+
+        @Override
+        public boolean isFinished() {
+            return super.isFinished() || _finished;
+        }
+
+        @Override
+        protected boolean isEqual(Task other) {
+            return other instanceof RunAwayFromPlayersTask task && task._avoidEntity == _avoidEntity;
+        }
+
+        @Override
+        protected String toDebugString() {
+            if (_avoidEntity != null && _avoidEntity.getName() != null)
+                return "Run away from " + _avoidEntity.getName().getString();
+            return "Run away from players (NO TARGET)";
+        }
     }
 
     public void setTargetEntity(Entity entity) {

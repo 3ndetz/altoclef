@@ -92,7 +92,7 @@ public class KillAura {
                     && (mod.getItemStorage().hasItem(Items.SHIELD) || mod.getItemStorage().hasItemInOffhand(Items.SHIELD))
                     && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
                     && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
-                LookHelper.lookAt(mod, entities.get().getEyePos());
+                LookHelper.smoothLookAt(mod, entities.get().getEyePos());
                 ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
                 if (shieldSlot.getItem() != Items.SHIELD) {
                     mod.getSlotHandler().forceEquipItemToOffhand(Items.SHIELD);
@@ -170,7 +170,7 @@ public class KillAura {
             double xAim = entity.getX();
             double yAim = entity.getY() + (entity.getHeight() / 1.4);
             double zAim = entity.getZ();
-            LookHelper.lookAt(mod, new Vec3d(xAim, yAim, zAim));
+            LookHelper.smoothLookAt(mod, new Vec3d(xAim, yAim, zAim));
         }
         if (Double.isInfinite(forceFieldRange) || entity.squaredDistanceTo(mod.getPlayer()) < forceFieldRange * forceFieldRange ||
                 entity.squaredDistanceTo(mod.getPlayer()) < 40) {
