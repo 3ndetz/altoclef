@@ -143,6 +143,7 @@ public class AltoClef implements ModInitializer {
         extraController = new PlayerExtraController(this);
 
         // Task chains
+        new GameMenuTaskChain(taskRunner);
         userTaskChain = new UserTaskChain(taskRunner);
         mobDefenseChain = new MobDefenseChain(taskRunner);
         new DeathMenuChain(taskRunner);
@@ -242,6 +243,10 @@ public class AltoClef implements ModInitializer {
         trackerManager.tick();
         blockScanner.tick();
         taskRunner.tick();
+
+        if (taskRunner.gameMenuTaskChain != null) {
+            taskRunner.gameMenuTaskChain.onTickPost(this);
+        }
 
         messageSender.tick();
 

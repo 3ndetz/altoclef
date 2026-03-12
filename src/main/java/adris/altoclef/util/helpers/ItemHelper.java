@@ -543,7 +543,12 @@ public class ItemHelper {
         for (Slot slot : slots) {
             net.minecraft.item.ItemStack item = StorageHelper.getItemStackInSlot(slot);
             if (item != null && !item.isEmpty()) {
-                if (item.hasCustomName()) {
+                //#if MC >= 12005
+                boolean hasCustomName = item.get(net.minecraft.component.DataComponentTypes.CUSTOM_NAME) != null;
+                //#else
+                //$$ boolean hasCustomName = item.hasCustomName();
+                //#endif
+                if (hasCustomName) {
                     String itemCustomName = removeMCFormatCodes(item.getName().getString().toLowerCase());
                     for (String check : checkItemName) {
                         if (check.toLowerCase().equals(itemCustomName) || check.toLowerCase().contains(itemCustomName)) {
