@@ -21,7 +21,8 @@ public class AvoidCommand extends Command {
         }
         mod.getDamageTracker().getThreatTable().forget(username);
         mod.getDamageTracker().getThreatTable().avoid(username);
-        if (!mod.getTaskRunner().getCurrentTaskChain().isActive()) {
+        adris.altoclef.tasksystem.TaskChain current = mod.getTaskRunner().getCurrentTaskChain();
+        if (current == null || !current.isActive()) {
             mod.runUserTask(new IdleTask());
         }
     }

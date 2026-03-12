@@ -22,7 +22,8 @@ public class PursueCommand extends Command {
         if (mod.getInfoSender() != null) {
             mod.getInfoSender().attackPlayer(username);
         }
-        if (!mod.getTaskRunner().getCurrentTaskChain().isActive()) {
+        adris.altoclef.tasksystem.TaskChain current = mod.getTaskRunner().getCurrentTaskChain();
+        if (current == null || !current.isActive()) {
             mod.runUserTask(new IdleTask());
         }
     }
