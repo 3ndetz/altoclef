@@ -46,6 +46,8 @@ public class MessageSender {
     }
 
     public void enqueueWhisper(String username, String message, MessagePriority priority) {
+        var player = MinecraftClient.getInstance().player;
+        if (player != null && username.equals(player.getName().getString())) return;
         whisperQueue.add(new Whisper(username, message, priority, messageCounter++));
     }
 

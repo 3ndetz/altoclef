@@ -92,13 +92,13 @@ public class DamageTracker extends Tracker {
     public void onClientDeath(String killername) {
         Debug.logMessage("confirmed death from " + killername);
         if (mod.getInfoSender() != null && !killername.equals("undefined")) {
-            // mod.getInfoSender().onDeath(killername);
+            mod.getInfoSender().onDeath(killername);
         }
     }
 
     public void onClientKill(String name) {
         Debug.logMessage("confirmed kill -" + name);
-        // if (mod.getInfoSender() != null && !name.equals("undefined")) mod.getInfoSender().onKill(name);
+        if (mod.getInfoSender() != null && !name.equals("undefined")) mod.getInfoSender().onKill(name);
     }
 
     public ThreatTable getThreatTable() {
@@ -111,14 +111,20 @@ public class DamageTracker extends Tracker {
 
     public void onDamage(String name, float amount) {
         if (mod.getInfoSender() != null && name.equals(mod.getPlayer().getName().getString())) {
-            // mod.getInfoSender().onDamage(amount);
+            mod.getInfoSender().onDamage(amount);
+        }
+        if (amount > 1 && name.equals(_lastAttackingPlayerName) && !_attackCheckTimer.elapsed()) {
+            Debug.logInternal("Урон по " + _lastAttackingPlayerName + " прошел!");
+            _attackerCheckHit = false;
         }
         int id = threatTable.get(name);
         if (id != -1) {
             threatTable.recordDamageConfirmed(id, amount);
         }
         String att_name = threatTable.getLastAttacker(name);
-        // if (mod.getInfoSender() != null && att_name != null) mod.getInfoSender().onDamageConfirmed(...);
+        if (mod.getInfoSender() != null && att_name != null) {
+            mod.getInfoSender().onDamageConfirmed(name, att_name, amount);
+        }
     }
 
     public void onChangeHealth(String name, float oldHealth, float newHealth) {

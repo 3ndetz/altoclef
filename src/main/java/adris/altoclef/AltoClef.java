@@ -133,6 +133,11 @@ public class AltoClef implements ModInitializer {
     }
 
     public void initializePythonSender() {
+        if (_gatewayServer != null) {
+            // Already running — restart cleanly to pick up new port settings
+            reloadPythonSender();
+            return;
+        }
         _py4jEntryPoint = new Py4jEntryPoint(this);
         final int JAVA_GATEWAY_PORT = getModSettings().getPythonGatewayPort();
         final int PYTHON_CALLBACK_PORT = getModSettings().getPythonGatewayPort() + 1;
