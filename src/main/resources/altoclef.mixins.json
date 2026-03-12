@@ -18,7 +18,6 @@
     "GameOverlayMixin",
     "LivingEntityMixin",
     "MapRendererInvoker",
-    "MapTextureAccessor",
     "MinecraftClientSessionMixin",
     "MiningToolItemAccessor",
     "PersistentProjectileEntityAccessor",
