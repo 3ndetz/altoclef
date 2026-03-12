@@ -197,8 +197,10 @@ public class BotBehaviour {
     public void resetCameraPositionModifer() { /* Phase 4: EpicCamera stub */ }
 
     // --- User task chain priority ---
-    public void setUserTaskChainPriority(float priority) { /* stub */ }
-    public void setDefaultUserTaskChainPriority() { /* stub */ }
+    private float _userTaskChainPriority = 50;
+    public float getUserTaskChainPriority() { return _userTaskChainPriority; }
+    public void setUserTaskChainPriority(float priority) { _userTaskChainPriority = priority; }
+    public void setDefaultUserTaskChainPriority() { _userTaskChainPriority = 50; }
 
     public void allowSwimThroughLava(boolean allow) {
         current().swimThroughLava = allow;

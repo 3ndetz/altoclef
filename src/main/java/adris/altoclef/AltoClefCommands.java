@@ -43,6 +43,14 @@ public class AltoClefCommands {
                 new GiveCommand(),
                 new PunkCommand(),
                 new SelfCareCommand(),
+                // Agent / custom tasks / settings
+                new AgentCommand(),
+                new CustomCommand(),
+                new SetSettingsCommand(),
+                new TimeoutCommand(),
+                new TimeoutSpecificCommand(),
+                new CoverWithBlocksCommand(),
+                new CoverWithSandCommand(),
                 // Multiplayer commands
                 new AvoidCommand(),
                 new CombatCommand(),

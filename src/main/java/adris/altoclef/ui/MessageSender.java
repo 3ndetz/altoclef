@@ -81,6 +81,12 @@ public class MessageSender {
         ClientPlayNetworkHandler networkHandler =  MinecraftClient.getInstance().getNetworkHandler();
         assert networkHandler != null;
 
+        // Auto-detect commands: messages starting with "/" should be sent as commands, not chat
+        if (!command && message.length() > 1 && message.startsWith("/")) {
+            command = true;
+            message = message.substring(1);
+        }
+
         if (command) {
             PlayerVer.sendChatCommand(MinecraftClient.getInstance().player, message);
         } else {

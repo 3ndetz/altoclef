@@ -54,7 +54,19 @@ public class CommandStatusOverlay {
         int addX = 4;
         int addY = fontHeight + 2;
 
-        context.drawText(renderer,mod.getTaskRunner().statusReport, x, y, Color.LIGHT_GRAY.getRGB(), true);
+        // Show chain name if a non-user chain is running (e.g. SupervisorTaskChain)
+        String chainInfo = "";
+        if (mod.getTaskRunner().getCurrentTaskChain() != null
+                && !(mod.getTaskRunner().getCurrentTaskChain() instanceof adris.altoclef.chains.UserTaskChain)) {
+            chainInfo = " {" + mod.getTaskRunner().getCurrentTaskChain().getName() + "}";
+        }
+        // Append CB=ON / server info from Py4j if available
+        String agentInfo = "";
+        if (mod.getInfoSender() != null) {
+            String info = mod.getInfoSender().getInfo();
+            if (info != null && !info.isBlank()) agentInfo = " | " + info;
+        }
+        context.drawText(renderer, mod.getTaskRunner().statusReport + chainInfo + agentInfo, x, y, Color.LIGHT_GRAY.getRGB(), true);
         y += addY;
 
         if (tasks.isEmpty()) {

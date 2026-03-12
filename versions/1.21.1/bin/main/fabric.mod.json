@@ -21,7 +21,13 @@
   "entrypoints": {
     "main": [
       "adris.altoclef.AltoClef"
+    ],
+    "voicechat": [
+      "adris.altoclef.AltoclefVoicechat"
     ]
+  },
+  "suggests": {
+    "voicechat": ">=2.5.0"
   },
   "mixins": [
     "altoclef.mixins.json"

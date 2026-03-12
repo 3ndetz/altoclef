@@ -35,6 +35,7 @@ import baritone.altoclef.AltoClefSettings;
 import baritone.api.BaritoneAPI;
 import baritone.api.Settings;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -89,6 +90,11 @@ public class AltoClef implements ModInitializer {
     // Pausing
     private boolean paused = false;
     private Task storedTask;
+
+    // Task timeout
+    private boolean _timeoutActive = false;
+    private float _timeoutDuration = 60;
+    private long _timeoutStartMs;
 
     private static AltoClef instance;
 
@@ -253,6 +259,23 @@ public class AltoClef implements ModInitializer {
 
             // Initialize Python sender after settings are loaded (needs getPythonGatewayPort())
             initializePythonSender();
+        });
+
+        // Forward incoming server chat/game messages to Py4j bridge
+        String _modChatPrefixNoCodes = getModSettings().getChatLogPrefix();
+        ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
+            String msg = message.getString();
+            if (getInfoSender() != null && !msg.startsWith(_modChatPrefixNoCodes))
+                getInfoSender().onChatMessage(msg);
+            return true;
+        });
+        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
+            if (!overlay) {
+                String msg = message.getString();
+                if (getInfoSender() != null && !msg.contains(_modChatPrefixNoCodes))
+                    getInfoSender().onChatMessage(msg);
+            }
+            return true;
         });
 
         // Receive + cancel chat
@@ -451,6 +474,35 @@ public class AltoClef implements ModInitializer {
      */
     public Task getStoredTask() {
         return storedTask;
+    }
+
+    // --- Task timeout ---
+    /** Enable task timeout with default duration (60s). */
+    public void setTimeoutTaskFlag(boolean active) {
+        _timeoutActive = active;
+        _timeoutDuration = 60;
+        _timeoutStartMs = System.currentTimeMillis();
+    }
+
+    /** Enable task timeout with a specific duration in seconds. */
+    public void setTimeoutTask(float seconds) {
+        _timeoutActive = true;
+        _timeoutDuration = seconds;
+        _timeoutStartMs = System.currentTimeMillis();
+    }
+
+    /**
+     * Returns true (and clears the flag) if a timeout was active and has elapsed.
+     * Called from UserTaskChain each tick.
+     */
+    public boolean checkAndClearTimeout() {
+        if (!_timeoutActive) return false;
+        float elapsed = (System.currentTimeMillis() - _timeoutStartMs) / 1000f;
+        if (elapsed >= _timeoutDuration) {
+            _timeoutActive = false;
+            return true;
+        }
+        return false;
     }
 
     /**

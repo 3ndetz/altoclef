@@ -87,6 +87,10 @@ repositories {
         name = 'babbaj-repo'
         url = 'https://babbaj.github.io/maven/'
     }
+    maven {
+        name = 'maxhenkel-repo'
+        url = 'https://maven.maxhenkel.de/repository/public'
+    }
     flatDir {
         dirs '../baritone/dist'
     }
@@ -116,6 +120,13 @@ dependencies {
 
     // Nether pathfinder
     implementation 'dev.babbaj:nether-pathfinder:1.5'
+
+    // Voice chat API (compile-time only; runtime provided by simple-voice-chat mod)
+    compileOnly 'de.maxhenkel.voicechat:voicechat-api:2.6.0'
+
+    // Voice chat mod is OPTIONAL — install simple-voice-chat.jar manually into your mods folder.
+    // No auto-download: the mod isn't available from accessible Maven repos.
+    // The compileOnly API above is sufficient for building.
 
     // Py4j (Python bridge)
     implementation 'net.sf.py4j:py4j:0.10.9.7'

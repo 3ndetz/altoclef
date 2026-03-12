@@ -10,6 +10,7 @@ import adris.altoclef.util.time.Stopwatch;
 
 // A task chain that runs a user defined task at the same priority.
 // This basically replaces our old Task Runner.
+@SuppressWarnings("ALL")
 public class UserTaskChain extends SingleTaskChain {
 
     private final Stopwatch taskStopwatch = new Stopwatch();
@@ -22,7 +23,15 @@ public class UserTaskChain extends SingleTaskChain {
         super(runner);
     }
 
-    private static String prettyPrintTimeDuration(double seconds) {
+    public double getTaskRunningTime() {
+        return taskStopwatch.time();
+    }
+
+    public String getTaskRunningTimeString() {
+        return prettyPrintTimeDuration(taskStopwatch.time());
+    }
+
+    public static String prettyPrintTimeDuration(double seconds) {
         int minutes = (int) (seconds / 60);
         int hours = minutes / 60;
         int days = hours / 24;
@@ -40,15 +49,22 @@ public class UserTaskChain extends SingleTaskChain {
         if (!result.isEmpty()) {
             result += "and ";
         }
-        result += String.format("%.3f", (seconds % 60));
+        result += String.format("%.1f", (seconds % 60));
         return result;
     }
 
     @Override
     protected void onTick() {
-
         // Pause if we're not loaded into a world.
         if (!AltoClef.inGame()) return;
+
+        // Check task timeout
+        AltoClef mod = AltoClef.getInstance();
+        if (mod != null && mainTask != null && mainTask.isActive() && mod.checkAndClearTimeout()) {
+            Debug.logMessage("Задача завершена по таймауту.");
+            cancel(mod);
+            return;
+        }
 
         super.onTick();
     }
@@ -67,12 +83,14 @@ public class UserTaskChain extends SingleTaskChain {
 
     @Override
     public float getPriority() {
+        AltoClef mod = AltoClef.getInstance();
+        if (mod != null) return mod.getBehaviour().getUserTaskChainPriority();
         return 50;
     }
 
     @Override
     public String getName() {
-        return "User Tasks";
+        return "UserTaskChain";
     }
 
     public void runTask(AltoClef mod, Task task, Runnable onFinish) {
@@ -82,7 +100,7 @@ public class UserTaskChain extends SingleTaskChain {
         currentOnFinish = onFinish;
 
         if (!runningIdleTask) {
-            Debug.logMessage("User Task Set: " + task.toString());
+            Debug.logMessage("New task set to: " + task.toString());
         }
         mod.getTaskRunner().enable();
         taskStopwatch.begin();
@@ -113,7 +131,7 @@ public class UserTaskChain extends SingleTaskChain {
         boolean actuallyDone = mainTask == null;
         if (actuallyDone) {
             if (!runningIdleTask) {
-                Debug.logMessage("User task FINISHED. Took %s seconds.", prettyPrintTimeDuration(seconds));
+                Debug.logMessage("Поставленная задача ЗАВЕРШЕНА за %s сек.", prettyPrintTimeDuration(seconds));
                 EventBus.publish(new TaskFinishedEvent(seconds, oldTask));
             }
             if (shouldIdle) {
