@@ -186,7 +186,8 @@ public class KillAura {
                 canAttack = mod.getSlotHandler().forceDeequipHitTool();
             }
             if (canAttack) {
-                if (mod.getPlayer().isOnGround() || mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater()) {
+                // isOnGround() intentionally removed — matches autoclef (allows sprint-crit attacks while jumping)
+                if (mod.getPlayer().getVelocity().getY() < 0 || mod.getPlayer().isTouchingWater()) {
                     attackedLastTick = true;
                     mod.getControllerExtras().attack(entity);
                 }

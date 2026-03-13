@@ -108,21 +108,18 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
             boolean tooClose = sqDist < maintainDistance * maintainDistance;
 
-            // Step away if we're too close
-            if (tooClose && !mod.getClientBaritone().getCustomGoalProcess().isActive()) {
+            // Step away if too close — but NEVER run away from a player target (we need to be close to fight!)
+            if (tooClose && !(entity instanceof PlayerEntity) && !mod.getClientBaritone().getCustomGoalProcess().isActive()) {
                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
             }
 
-            // For player targets: allow interaction while in air and while Baritone is chasing them.
-            // For mobs (speedrun): keep original strict conditions (on-ground, safe-to-cancel).
-            boolean isPlayerTarget = entity instanceof PlayerEntity;
-            boolean baseConditions = mod.getControllerExtras().inRange(entity) && result != null &&
+            // Interact when in range. isOnGround() intentionally NOT required — matches autoclef behaviour
+            // (allows attacking while jumping, which is normal sprint-crit PvP).
+            if (mod.getControllerExtras().inRange(entity) && result != null &&
                     result.getType() == HitResult.Type.ENTITY && !mod.getFoodChain().needsToEat() &&
                     !mod.getMLGBucketChain().isFalling(mod) && mod.getMLGBucketChain().doneMLG() &&
-                    !mod.getMLGBucketChain().isChorusFruiting();
-            boolean canInteract = baseConditions && (isPlayerTarget ||
-                    (mod.getClientBaritone().getPathingBehavior().isSafeToCancel() && mod.getPlayer().isOnGround()));
-            if (canInteract) {
+                    !mod.getMLGBucketChain().isChorusFruiting() &&
+                    mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
                 progress.reset();
                 return onEntityInteract(mod, entity);
             } else if (!tooClose) {
