@@ -868,6 +868,9 @@ public interface LookHelper {
         double baseWind = 1000, baseGravity = 8000, baseMaxStep = 1000000;
         double actualWind = baseWind * timeDelta, actualGravity = baseGravity * timeDelta, actualMaxStep = baseMaxStep * timeDelta;
 
+        // distanceFactor = min(1.0, distanceToTarget) — always <= 1.0, so dampening below always applies (matches autoclef)
+        double distanceFactor = Math.min(1.0, distanceToTarget);
+
         WindMouseState.windX = WindMouseState.windX / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
         WindMouseState.windY = WindMouseState.windY / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
         WindMouseState.veloX += WindMouseState.windX;
@@ -880,7 +883,7 @@ public interface LookHelper {
             WindMouseState.veloX = (WindMouseState.veloX / veloMag) * randomDist;
             WindMouseState.veloY = (WindMouseState.veloY / veloMag) * randomDist;
         }
-        if (distanceToTarget < 2) {
+        if (distanceFactor < 2) { // always true since distanceFactor <= 1.0 — dampening always active
             WindMouseState.veloX *= Math.pow(0.3, timeDelta * 60);
             WindMouseState.veloY *= Math.pow(0.3, timeDelta * 60);
         }
