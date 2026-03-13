@@ -790,7 +790,9 @@ public interface LookHelper {
     public static class WindMouseState {
         public static boolean isRotating = false;
         public static double windX = 0, windY = 0, veloX = 0, veloY = 0;
+        public static double currentX = 0, currentY = 0;
         public static Rotation targetRotation = null;
+        public static Rotation startRotation = null;
         public static Entity targetEntity = null;
         public static float speed = 1.0f;
         public static long lastUpdateTime = System.currentTimeMillis();
@@ -798,31 +800,66 @@ public interface LookHelper {
         public static final long ROTATION_TIMEOUT = 1000;
     }
 
+    public static boolean isCloseRotations(Rotation startRot, Rotation newRot) {
+        // tolerance=1000 means this essentially never returns true (max angular diff is 360).
+        // Kept for API compatibility with autoclef.
+        float closenessTolerance = 1000;
+        return (Math.abs(normalizeAngle(startRot.getYaw() - newRot.getYaw())) > closenessTolerance ||
+                Math.abs(startRot.getPitch() - newRot.getPitch()) > closenessTolerance);
+    }
+
     private static void smoothLookInternal(AltoClef mod, Rotation targetRot, Entity targetEntity, float speed) {
-        WindMouseState.isRotating = true;
+        long currentTime = System.currentTimeMillis();
+        boolean isNewRotation = !WindMouseState.isRotating ||
+                currentTime - WindMouseState.lastUpdateTime > WindMouseState.ROTATION_TIMEOUT;
+
+        boolean shouldReset = isNewRotation;
+        if (targetEntity != null) {
+            shouldReset = shouldReset || WindMouseState.targetEntity == null
+                    || !WindMouseState.targetEntity.equals(targetEntity);
+        }
+
+        if (shouldReset || (WindMouseState.targetRotation != null && !isCloseRotations(targetRot, WindMouseState.targetRotation))) {
+            WindMouseState.isRotating = true;
+            WindMouseState.targetEntity = targetEntity;
+            WindMouseState.startRotation = getLookRotation(mod.getPlayer());
+        }
         WindMouseState.targetEntity = targetEntity;
+        WindMouseState.isRotating = true;
         WindMouseState.targetRotation = targetRot;
         WindMouseState.speed = speed;
-        WindMouseState.lastUpdateTime = System.currentTimeMillis();
+        WindMouseState.lastUpdateTime = currentTime;
     }
 
     public static boolean updateWindMouseRotation(AltoClef mod) {
         long currentTime = System.currentTimeMillis();
+        // CRITICAL: always advance the clock even when not rotating — prevents huge timeDelta spike on restart
+        double timeDelta = (currentTime - WindMouseState.lastUpdateTimeInternal) / 1000.0;
+        timeDelta *= WindMouseState.speed;
+        WindMouseState.lastUpdateTimeInternal = currentTime;
+
         if (!WindMouseState.isRotating) return true;
+
         if (currentTime - WindMouseState.lastUpdateTime > WindMouseState.ROTATION_TIMEOUT) {
             WindMouseState.isRotating = false;
+            WindMouseState.targetEntity = null;
+            WindMouseState.currentX = 0; WindMouseState.currentY = 0;
             WindMouseState.windX = 0; WindMouseState.windY = 0;
             WindMouseState.veloX = 0; WindMouseState.veloY = 0;
             return true;
         }
+
         if (WindMouseState.targetEntity != null && WindMouseState.targetEntity.isAlive()) {
             WindMouseState.targetRotation = getLookRotation(mod, getClosestPointOnEntityHitbox(mod, WindMouseState.targetEntity));
         }
         if (WindMouseState.targetRotation == null) return false;
-        double timeDelta = (currentTime - WindMouseState.lastUpdateTimeInternal) / 1000.0 * WindMouseState.speed;
-        WindMouseState.lastUpdateTimeInternal = currentTime;
 
-        Rotation currentRotation = getLookRotation();
+        // Don't fight with Baritone's custom goal pathing rotation
+        if (mod.getClientBaritone().getCustomGoalProcess().isActive()) {
+            return false;
+        }
+
+        Rotation currentRotation = getLookRotation(mod.getPlayer());
         double deltaYaw = normalizeAngle(WindMouseState.targetRotation.getYaw() - currentRotation.getYaw());
         double deltaPitch = WindMouseState.targetRotation.getPitch() - currentRotation.getPitch();
         double distanceToTarget = Math.sqrt(deltaYaw * deltaYaw + deltaPitch * deltaPitch);
@@ -830,10 +867,13 @@ public interface LookHelper {
 
         double baseWind = 1000, baseGravity = 8000, baseMaxStep = 1000000;
         double actualWind = baseWind * timeDelta, actualGravity = baseGravity * timeDelta, actualMaxStep = baseMaxStep * timeDelta;
+
         WindMouseState.windX = WindMouseState.windX / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
         WindMouseState.windY = WindMouseState.windY / Math.sqrt(3) + ((Math.random() - 0.5) * actualWind * 2) / Math.sqrt(5);
-        WindMouseState.veloX += WindMouseState.windX + deltaYaw * actualGravity;
-        WindMouseState.veloY += WindMouseState.windY + deltaPitch * actualGravity;
+        WindMouseState.veloX += WindMouseState.windX;
+        WindMouseState.veloY += WindMouseState.windY;
+        WindMouseState.veloX += deltaYaw * actualGravity;
+        WindMouseState.veloY += deltaPitch * actualGravity;
         double veloMag = Math.sqrt(WindMouseState.veloX * WindMouseState.veloX + WindMouseState.veloY * WindMouseState.veloY);
         if (veloMag > actualMaxStep) {
             double randomDist = actualMaxStep / 2.0 + (Math.random() * actualMaxStep) / 2;
