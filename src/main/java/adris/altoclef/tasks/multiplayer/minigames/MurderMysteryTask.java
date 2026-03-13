@@ -24,6 +24,9 @@ import static adris.altoclef.util.helpers.ItemHelper.clickCustomItem;
 
 public class MurderMysteryTask extends Task {
 
+    // Radius at which a dangerous enemy is detected / loot near enemies is blacklisted
+    private static final double DANGER_RADIUS = 20.0;
+
     private Vec3d _closestPlayerLastPos;
     private Vec3d _closestPlayerLastObservePos;
     private double _closestDistance;
@@ -193,7 +196,7 @@ public class MurderMysteryTask extends Task {
 
         if (closestDanger.isPresent() && !injured) {
             Entity danger = closestDanger.get();
-            if (mod.getPlayer().distanceTo(danger) < 20) {
+            if (mod.getPlayer().distanceTo(danger) < DANGER_RADIUS) {
                 setDebugState("RUNNING FROM DANGER");
                 _runAwayExtraTime.reset();
                 if (_change_chain_priority)
@@ -229,11 +232,16 @@ public class MurderMysteryTask extends Task {
                         return _shootArrowTask;
                     }
                 }
+                // LOS but no action taken — hold position, do NOT fall through to loot pickup
+                setDebugState("Observing enemy...");
+                return null;
             } else if (!injured) {
                 setDebugState("PURSUE ENEMY!");
                 if (_change_chain_priority) mod.getBehaviour().setUserTaskChainPriority(80);
                 return new GetToEntityTask(entity);
             }
+            // Active enemy present — never loot while in combat state
+            return null;
         }
 
         if (injured) {
@@ -245,7 +253,9 @@ public class MurderMysteryTask extends Task {
             if (mod.getEntityTracker().itemDropped(check)) {
                 Optional<ItemEntity> closestEnt = mod.getEntityTracker().getClosestItemDrop(
                         ent -> mod.getEntityTracker().isEntityReachable(ent)
-                                && mod.getPlayer().getPos().isInRange(ent.getEyePos(), 400),
+                                && mod.getPlayer().getPos().isInRange(ent.getEyePos(), 400)
+                                // Skip loot that is too close to any known enemy — avoids oscillation bug
+                                && !isLootNearEnemy(mod, ent, DANGER_RADIUS),
                         check);
                 if (closestEnt.isPresent()) {
                     if (_change_chain_priority) mod.getBehaviour().setDefaultUserTaskChainPriority();
@@ -336,6 +346,15 @@ public class MurderMysteryTask extends Task {
         } else {
             return Objects.equals(role, MurderRole.KILLER);
         }
+    }
+
+    /**
+     * Returns true if the dropped item entity is within {@code radius} blocks of any known enemy.
+     * Used to skip loot that would pull the bot back toward a dangerous player.
+     */
+    private boolean isLootNearEnemy(AltoClef mod, ItemEntity item, double radius) {
+        return mod.getEntityTracker().getTrackedEntities(PlayerEntity.class).stream()
+                .anyMatch(player -> isEnemy(mod, player) && player.getPos().isInRange(item.getPos(), radius));
     }
 
     private boolean useBow(AltoClef mod, Entity target) {
