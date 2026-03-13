@@ -14,6 +14,7 @@ import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import adris.altoclef.util.slots.Slot;
 import baritone.api.pathing.goals.GoalRunAway;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.hit.EntityHitResult;
@@ -112,12 +113,16 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
                 mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(maintainDistance, entity.getBlockPos()));
             }
 
-            if (mod.getControllerExtras().inRange(entity) && result != null &&
+            // For player targets: allow interaction while in air and while Baritone is chasing them.
+            // For mobs (speedrun): keep original strict conditions (on-ground, safe-to-cancel).
+            boolean isPlayerTarget = entity instanceof PlayerEntity;
+            boolean baseConditions = mod.getControllerExtras().inRange(entity) && result != null &&
                     result.getType() == HitResult.Type.ENTITY && !mod.getFoodChain().needsToEat() &&
                     !mod.getMLGBucketChain().isFalling(mod) && mod.getMLGBucketChain().doneMLG() &&
-                    !mod.getMLGBucketChain().isChorusFruiting() &&
-                    mod.getClientBaritone().getPathingBehavior().isSafeToCancel() &&
-                    mod.getPlayer().isOnGround()) {
+                    !mod.getMLGBucketChain().isChorusFruiting();
+            boolean canInteract = baseConditions && (isPlayerTarget ||
+                    (mod.getClientBaritone().getPathingBehavior().isSafeToCancel() && mod.getPlayer().isOnGround()));
+            if (canInteract) {
                 progress.reset();
                 return onEntityInteract(mod, entity);
             } else if (!tooClose) {
