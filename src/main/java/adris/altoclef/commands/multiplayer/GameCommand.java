@@ -6,8 +6,13 @@ import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.args.StringArg;
 import adris.altoclef.commandsystem.exception.CommandException;
+import adris.altoclef.tasks.multiplayer.minigames.BedWarsTask;
+import adris.altoclef.tasks.multiplayer.minigames.KitPVPTask;
+import adris.altoclef.tasks.multiplayer.minigames.MurderMysteryTask;
+import adris.altoclef.tasks.multiplayer.minigames.SkyWarsTask;
 import adris.altoclef.tasks.speedrun.beatgame.BeatMinecraftTask;
 import adris.altoclef.util.agent.Pipeline;
+import net.minecraft.util.math.BlockPos;
 
 public class GameCommand extends Command {
     public GameCommand() {
@@ -31,30 +36,38 @@ public class GameCommand extends Command {
                 AltoClef.setPipeline(Pipeline.None);
                 finish();
                 break;
-            // SkyWars, BedWars, BattleRoyale tasks not yet ported — set pipeline flag only
             case "swt", "skywarsteam", "sky_wars_team":
                 AltoClef.setPipeline(Pipeline.SkyWars);
-                Debug.logMessage("Pipeline set to SkyWars (task not yet available)");
-                finish();
+                Debug.logMessage("Pipeline set to swt");
+                mod.getButler().AddNearestPlayerToFriends(mod, 15);
+                mod.runUserTask(new SkyWarsTask(new BlockPos(0, 0, 0), 0d, false), this::finish);
                 break;
             case "sw", "skywars", "sky_wars":
                 AltoClef.setPipeline(Pipeline.SkyWars);
-                Debug.logMessage("Pipeline set to SkyWars (task not yet available)");
-                finish();
+                Debug.logMessage("Pipeline set to sw");
+                mod.runUserTask(new SkyWarsTask(new BlockPos(0, 0, 0), 0d, false), this::finish);
                 break;
             case "mm", "murder", "murdermystery", "mystery":
                 AltoClef.setPipeline(Pipeline.MurderMystery);
-                Debug.logMessage("Pipeline set to MurderMystery (task not yet available)");
-                finish();
+                Debug.logMessage("Pipeline set to mm");
+                mod.runUserTask(new MurderMysteryTask(-1), this::finish);
                 break;
             case "bw", "bed", "bedwars":
                 AltoClef.setPipeline(Pipeline.BedWars);
-                Debug.logMessage("Pipeline set to BedWars (task not yet available)");
-                finish();
+                Debug.logMessage("Pipeline set to bw");
+                mod.runUserTask(new BedWarsTask(), this::finish);
+                break;
+            case "kpvp", "kitpvp", "kit":
+                Debug.logMessage("Pipeline set to KitPVP");
+                mod.runUserTask(new KitPVPTask(mod.getPlayer().getBlockPos(), 900, false), this::finish);
+                break;
+            case "thepit", "pit":
+                Debug.logMessage("Pipeline set to ThePit");
+                mod.runUserTask(new SkyWarsTask(mod.getPlayer().getBlockPos(), true, false), this::finish);
                 break;
             case "megabattle", "mega", "evil", "yandere":
                 AltoClef.setPipeline(Pipeline.BattleRoyale);
-                Debug.logMessage("Pipeline set to BattleRoyale (task not yet available)");
+                Debug.logMessage("Pipeline set yandere");
                 finish();
                 break;
             default:
