@@ -87,7 +87,9 @@ public class GameMenuTaskChain extends SingleTaskChain {
     private boolean _joined = false;
     public TimerReal clickTimer = new TimerReal(0.7);
     public TimerReal _reloadInfoSenderTimer = new TimerReal(10);
+    private boolean _infoSenderLoaded = true;
 
+    // Timers for different click operations
     private final TimerReal _slotClickTimer = new TimerReal(0.5);
     private final TimerReal _worldJoinTimer = new TimerReal(3);
     private final TimerReal _minigameButtonTimer = new TimerReal(1.0);
@@ -109,6 +111,23 @@ public class GameMenuTaskChain extends SingleTaskChain {
                 EventBus.publish(new RejoinEvent());
                 rejoinEventPublished = true;
             }
+        }
+
+        // Python sender auto-reload
+        if (mod.getModSettings().shouldReloadInfoSender() && _reloadInfoSenderTimer.elapsed()) {
+            if (!mod.getInfoSender().IsCallbackServerStarted()) {
+                if (_infoSenderLoaded) {
+                    Debug.logMessage("[InfoSender] Python callback connection lost. Retry...");
+                    _infoSenderLoaded = false;
+                }
+                mod.reloadPythonSender();
+            } else {
+                if (!_infoSenderLoaded) {
+                    Debug.logMessage("[InfoSender] Python callback connection established!");
+                    _infoSenderLoaded = true;
+                }
+            }
+            _reloadInfoSenderTimer.reset();
         }
 
         if (ButlerConfig.getInstance().autoJoin) {
@@ -196,6 +215,10 @@ public class GameMenuTaskChain extends SingleTaskChain {
                         mod.getMessageSender().enqueueChat("/hub", MessagePriority.TIMELY);
                         NeedtoStopTasksOnDeath = false;
                         _commandDelayTimer.reset();
+                        if (_commandDelayTimer.elapsed()) {
+                            _commandDelayTimer.reset();
+                            Debug.logMessage("ВАЛИМ! 111");
+                        }
                     }
                 }
             }
@@ -224,11 +247,13 @@ public class GameMenuTaskChain extends SingleTaskChain {
                     _prevServerEntry = srv;
                 }
 
+                Debug.logMessage("OPEN GAME MENU");
                 MinecraftClient client = MinecraftClient.getInstance();
                 client.setScreen(new GameMenuScreen(true));
                 disconnect(client);
                 SelectWorldScreen worldScreen = new SelectWorldScreen(new TitleScreen());
                 MinecraftClient.getInstance().setScreen(worldScreen);
+                Debug.logMessage("worldScreen.isMouseOver() " + worldScreen.isMouseOver(0, 0));
 
                 double x = worldScreen.width / 2.0 - 154;
                 double y = worldScreen.height - 52;
@@ -246,10 +271,13 @@ public class GameMenuTaskChain extends SingleTaskChain {
                         Runnable doOnStuckFixFinish = new Thread(() -> {
                             MinecraftClient clientt = MinecraftClient.getInstance();
                             clientt.setScreen(new GameMenuScreen(true));
+                            Debug.logMessage("[STUCKFIX] DISCONNECT STAGE 2");
                             disconnect(clientt);
                             mod.cancelUserTask();
                             mod.runUserTask(new GetToXZTask(0, 0));
+                            Debug.logMessage("[STUCKFIX] SET MP SCREEN");
                             MinecraftClient.getInstance().setScreen(new MultiplayerScreen(new TitleScreen()));
+                            Debug.logMessage("[STUCKFIX] RECONNECT TO SERVER");
                             if (_prevServerEntry == null) {
                                 _prevServerEntry = finalSrv;
                             }
@@ -283,6 +311,7 @@ public class GameMenuTaskChain extends SingleTaskChain {
                     _reJoinAfterDisconnect = false;
                 }
 
+                Debug.logMessage("[DISCONNECT CHAIN] OPEN GAME MENU");
                 MinecraftClient client = MinecraftClient.getInstance();
                 client.setScreen(new GameMenuScreen(true));
                 screen = client.currentScreen;
@@ -331,6 +360,7 @@ public class GameMenuTaskChain extends SingleTaskChain {
 
     public void disconnect(MinecraftClient client) {
         if (AltoClef.inGame() && client.world != null) {
+            Debug.logMessage("DISCONNECT");
             boolean bl = client.isInSingleplayer();
             client.world.disconnect();
             if (bl) {
@@ -338,6 +368,8 @@ public class GameMenuTaskChain extends SingleTaskChain {
             } else {
                 client.disconnect();
             }
+        } else {
+            Debug.logMessage("Tried to disconnect >>> world is null or not in game");
         }
     }
 
@@ -351,6 +383,7 @@ public class GameMenuTaskChain extends SingleTaskChain {
             Screen screen = MinecraftClient.getInstance().currentScreen;
             Debug.logMessage("RECONNECT CHAIN: Not in game; Connecting to server from menu: " + ip);
             if (!(screen instanceof MultiplayerScreen)) {
+                Debug.logMessage("RECONNECT CHAIN: Setting to MultiplayerScreen " + ip);
                 MinecraftClient.getInstance().setScreen(new MultiplayerScreen(new TitleScreen()));
             }
             _needDisconnect = false;

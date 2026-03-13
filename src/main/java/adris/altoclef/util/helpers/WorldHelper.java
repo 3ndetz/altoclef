@@ -334,6 +334,20 @@ public interface WorldHelper {
         return block == Blocks.AIR || block == Blocks.CAVE_AIR || block == Blocks.VOID_AIR;
     }
 
+    static boolean isHellHole(BlockPos pos) {
+        int x = pos.getX();
+        int yThis = pos.getY();
+        int z = pos.getZ();
+        int count = 0;
+        for (int y = yThis; y >= -64; --y) {
+            BlockPos check = new BlockPos(x, y, z);
+            count++;
+            if (count > 40) return true;
+            if (!isAir(check)) return false;
+        }
+        return true;
+    }
+
     static boolean isInteractableBlock(BlockPos pos) {
         Block block = AltoClef.getInstance().getWorld().getBlockState(pos).getBlock();
         return (block instanceof ChestBlock

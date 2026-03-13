@@ -31,6 +31,8 @@ import java.util.function.Predicate;
 public class BotBehaviour {
 
     private final AltoClef mod;
+    private Predicate<BlockPos> _extraAvoidBlockPlacing = null;
+    private Predicate<BlockPos> _extraAvoidBlockBreaking = null;
     Deque<State> states = new ArrayDeque<>();
 
     private DamageTrackerStrategy _damageTrackerStrategy = DamageTrackerStrategy.Smart;
@@ -129,6 +131,26 @@ public class BotBehaviour {
 
     public void avoidBlockPlacing(Predicate<BlockPos> pred) {
         current().toAvoidPlacing.add(pred);
+        current().applyState();
+    }
+
+    public void avoidBlockPlacingExtra(Predicate<BlockPos> pred) {
+        _extraAvoidBlockPlacing = pred;
+        current().applyState();
+    }
+
+    public void resetAvoidBlockPlacingExtra() {
+        _extraAvoidBlockPlacing = null;
+        current().applyState();
+    }
+
+    public void avoidBlockBreakingExtra(Predicate<BlockPos> pred) {
+        _extraAvoidBlockBreaking = pred;
+        current().applyState();
+    }
+
+    public void resetAvoidBlockBreakingExtra() {
+        _extraAvoidBlockBreaking = null;
         current().applyState();
     }
 
@@ -415,6 +437,13 @@ public class BotBehaviour {
                     sa.getBlocksToAvoidBreaking().addAll(blocksToAvoidBreaking);
                     sa.getPlaceAvoiders().clear();
                     sa.getPlaceAvoiders().addAll(toAvoidPlacing);
+                    // Persistent extra predicates (outside push/pop stack)
+                    if (_extraAvoidBlockPlacing != null) {
+                        sa.getPlaceAvoiders().add(_extraAvoidBlockPlacing);
+                    }
+                    if (_extraAvoidBlockBreaking != null) {
+                        sa.getBreakAvoiders().add(_extraAvoidBlockBreaking);
+                    }
                     sa.getProtectedItems().clear();
                     sa.getProtectedItems().addAll(protectedItems);
                     synchronized (sa.getPropertiesMutex()) {
