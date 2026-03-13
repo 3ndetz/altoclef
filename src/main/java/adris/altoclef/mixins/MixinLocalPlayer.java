@@ -1,5 +1,6 @@
 package adris.altoclef.mixins;
 
+import adris.altoclef.util.helpers.MouseMoveHelper;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -18,11 +19,13 @@ public abstract class MixinLocalPlayer extends AbstractClientPlayerEntity {
 
     @Inject(method = "getPitch", at = @At("RETURN"), cancellable = true)
     public void getPitch(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        cir.setReturnValue(super.getPitch(tickDelta));
+        if (MouseMoveHelper.RotationEnabled)
+            cir.setReturnValue(super.getPitch(tickDelta));
     }
 
     @Inject(method = "getYaw", at = @At("RETURN"), cancellable = true)
     public void getYaw(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        cir.setReturnValue(super.getYaw(tickDelta));
+        if (MouseMoveHelper.RotationEnabled)
+            cir.setReturnValue(super.getYaw(tickDelta));
     }
 }

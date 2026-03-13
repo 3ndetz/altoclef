@@ -358,10 +358,6 @@ public class AltoClef implements ModInitializer {
         damageTracker.tick();
         taskRunner.tick();
 
-        if (inGame()) {
-            LookHelper.updateWindMouseRotation(this);
-        }
-
         if (taskRunner.gameMenuTaskChain != null) {
             taskRunner.gameMenuTaskChain.onTickPost(this);
         }
@@ -391,6 +387,10 @@ public class AltoClef implements ModInitializer {
 
         if (settings.shouldShowDebugTickMs()) {
             altoClefTickChart.render(this, context, 1, context.getScaledWindowWidth() / 2 - 124);
+        }
+
+        if (inGame()) {
+            LookHelper.updateWindMouseRotation(this);
         }
     }
 
