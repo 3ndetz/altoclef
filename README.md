@@ -1,120 +1,81 @@
-# Links
-- [About](#altoclef)
-- [Versions](#versions)
-- [Download](#download)
-- [FAQ](#faq)
-- [Other useful files](#other-useful-files)
+# AutoClef — multiplayer [altoclef](https://github.com/gaucho-matrero/altoclef)
 
-# AltoClef
-*Plays block game.*
+*Plays block game. Allows multiplayer and python-side scripting support via py5j endpoint.*
 
 *Powered by Baritone.*
 
-A client side bot that tries to beat Minecraft on its own...
+![Kill&loot](https://github.com/3ndetz/autoclef/assets/30196290/7377ec79-1c3d-493b-9a1d-5d701f19d9c9)
 
-**This fork is still under development and is nowhere near perfect, if you have any questions, suggestions, ideas or find a bug don't hesitate to reach out!
-You can use the [issues](https://github.com/MiranCZ/altoclef/issues). Or contact me on discord!**
+![qwenie](https://github.com/user-attachments/assets/64b98492-ceca-410f-b3bc-efbd8ea09dcb)
 
-Became [the first bot to beat Minecraft fully autonomously](https://youtu.be/baAa6s8tahA) on May 24, 2021.
+[<img src="https://img.shields.io/badge/Habr-%D0%A7%D0%B8%D1%82%D0%B0%D1%82%D1%8C-%23000000?style=for-the-badge&link=https://habr.com/ru/articles/812387&logo=habr&logoColor=%23FFFFFF&labelColor=%2365A3BE"/>](https://habr.com/ru/articles/812387/#SkyWarsBot)
 
-**Join the [Discord Server](https://discord.gg/JdFP4Kqdqc)** for discussions/updates/goofs & gaffs
+A**l**toClef could perform a full minecraft walkthrough. A**u**toClef enables it for multiplayer.
 
-## About this fork
-This fork aims to improve AltoClef by fixing a lot of bugs and optimizing some things. The main focus is optimizing the `MarvionBeatMinecraftTask` (I will just refer to it as `BeatMinecraftTask`) from [Marvion's fork](https://github.com/MarvionKirito/altoclef).
+> [!CAUTION]
+> <details><summary>RepoCodeDisclaimer ⚠️</summary>
+>
+> The "code" presented in the repository is mostly for prototyping. It should not be considered as a sample, it can be useful only to those who will be interested in repeating my experience, and not for "seekers of other people's mistakes" =)
+>
+> Furthermore, my experience in Java at the time of writing was extremely small (zero) and improving over time, so bugs or very silly things are possible. Unlike my other repositories, where I was in a hurry and would not really want to receive negative feedback, here it is the opposite, please report if you see something potentially bad in the code, because I still know Java not at a high level and would be happy to understand my mistakes!
+> </details>
 
-Because I rewrote a good portion of the `BeatMinecraftTask` a lot of the config settings don't work. Although I plan to implement configs in the future of course.  
+> [!TIP]
+> This mod is an interface designed for use with an autonomous virtual streamer. It has a Python-callback interface to connect with Python-app and some functions to get info from the game to pass them to a streamer agent. Also it has a rich improved command system, compatible for using with LLM agent.
 
-## The preprocessor
-I am currently using the [replay mod preprocessor](https://github.com/ReplayMod/preprocessor) to keep the mod updated across multiple versions at the same time.
+## Features
 
-### Versions
-Thanks to that, the mod is currently available on **fabric** for (basically) all versions between `1.21.1` and `1.16.5` (inclusive).
+<details><summary>Features added on top of the orig AltoClef</summary>
 
-(If there is a specific version in this range that you would like to use, and it isn't supported you can try creating an issue).
+- Smooth mouse look (for multiplayer anticheats killaura bypass)
+  - buggy, but working!
+- New tasks
+  - SkyWarsTask for playing SkyWars
+    - supports teammates
+  - ThePitTask and others in development
+- Support for connecting Python-scripts using Py4J library
+  - two-way interface: send position to Python, send commands to Java
+- Multi-version support (1.16.5 — 1.21.1) via preprocessor
 
+</details>
 
-> [!NOTE]   
-> All of the versions use the "same release" of Altoclef, although some of them use older versions of baritone.
-You can check out the baritone [here](https://github.com/MiranCZ/baritone_altoclef)
+## Versions
 
+Available on **fabric** `1.21` for now. NOT `1.21.1 or 1.21.X`, ONLY `1.21`!
 
-## How it works
+See `Releases` section and find the one with `Latest` tag.
 
-Take a look at this [Guide from the wiki](https://github.com/MiranCZ/altoclef/wiki/1:-Documentation:-Big-Picture)
-or this [Video explanation](https://youtu.be/q5OmcinQ2ck?t=387)
+> [!IMPORTANT]
+> After installing, remove any old baritone configurations. Preexisting baritone configs will interfere with altoclef.
+> You **do not** need to add baritone to your `mods` folder — it is already included.
 
+## Demo GIFs
 
-## Download
-> [!IMPORTANT]  
-> After installing, please move/delete your old baritone configurations if you have any. Preexisting baritone
-configurations will interfere with altoclef and introduce bugs. This will be fixed in the future.
+<details><summary>SkyWars bot autoplay Demo GIFs</summary>
 
+### Looting chests
+![Looting chests](https://github.com/3ndetz/autoclef/assets/30196290/aa44993e-a7e8-4285-bba6-a690b0ac29a2)
 
-Here is a list of links for download of the latest versions for convenience. 
+### Gapple & EnderPearl
+![Gapple & EnderPearl](https://github.com/3ndetz/autoclef/assets/30196290/0d3e73d2-2e1f-40e7-a53b-be43d3d9335d)
 
-| Version | Fabric download link                                                                                          |
-|---------|---------------------------------------------------------------------------------------------------------------|
-| 1.21.1  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.21.1-0.19.jar) |
-| 1.21    | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.21-0.19.jar)   |
-| 1.20.6  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.20.6-0.19.jar) |
-| 1.20.5  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.20.5-0.19.jar) |
-| 1.20.4  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.20.4-0.19.jar) |
-| 1.20.2  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.20.2-0.19.jar) |
-| 1.20.1  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.20.1-0.19.jar) |
-| 1.19.4  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.19.4-0.19.jar) |
-| 1.18.2  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.18.2-0.19.jar) |
-| 1.18    | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.18-0.19.jar)   |
-| 1.17.1  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.17.1-0.19.jar) |
-| 1.16.5  | [AltoClef 0.19 download](https://github.com/MiranCZ/altoclef/releases/download/0.19/altoclef-1.16.5-0.19.jar) |
+### Kill & Loot
+![Kill & Loot](https://github.com/3ndetz/autoclef/assets/30196290/7377ec79-1c3d-493b-9a1d-5d701f19d9c9)
 
+### Bow master
+![Bow](https://github.com/3ndetz/autoclef/assets/30196290/9bae7aee-f535-4704-83a3-3dd9ec885a80)
 
-You can also [check releases](https://github.com/MiranCZ/altoclef/releases) for all previous releases.
-
-
-## FAQ
-
-### My Altoclef is crashing! What do I do?
-
-> [!WARNING]    
-> If you are trying to run AltoClef on cracked launchers (TLauncher, launchers to run the game on mobile etc...) or unofficial launchers there is a high change I might not help you.
-
-- First check if you downloaded the right file for the right Minecraft version, every release has the name in the following pattern: `altoclef-<minecraftVersion>-<altoclefVersion>.jar`.
+</details>
 
 
-- You **DO NOT** need to include baritone in your `mods` folder, it is already included in Altoclef. If you did include it, remove it.
+## Fork History
 
+**[GauchoMatrero/altoclef](https://github.com/gaucho-matrero/altoclef)** → **[MarvionKirito/altoclef](https://github.com/MarvionKirito/altoclef)** → **[MiranCZ/altoclef](https://github.com/MiranCZ/altoclef)** → **this fork**
 
-- Altoclef **is not** intended to be used with other mods, so if the cause of the crash is another mod you are using it is very likely I won't do anything about that.
+[MiranCZ](https://github.com/MiranCZ) added multi-version support via the [ReplayMod preprocessor](https://github.com/ReplayMod/preprocessor) and fixed many bugs — this fork uses that as its base and adds multiplayer/SkyWars capabilities from [3ndetz/AutoClef](https://github.com/3ndetz/autoclef).
 
+## TODOs
 
-If you checked everything above and are still having trouble you can reach out to me on Altoclef discord (or create an issue).
-
-**Your message should include the following things:** exactly what problem you are having,
-what Minecraft version are you trying to run with what Altoclef version,
-specify that you are referring to this fork (there are multiple forks, so it makes everyone's life easier), what mods (if any) you are using and a crash-log
-(if the mod didn't crash on startup but rather after a specific action recording or description of that would also help).
-
-### Why was `terminator` and the ability to attack players removed?
-I don't feel like this bot should be focused on use on servers and having to handle players complicates things.
-So I just decided to remove that behaviour (at least for now).
-
-### Can you add X version of Minecraft?
-
-**Please note that for newest version of minecraft I need to wait for [baritone](https://github.com/MeteorDevelopment/baritone) to be ported first. Unless there is a branch for the specific version, please do not message me about that version since I need to wait for baritone to be ported first.**
-
-
-I am planning to support all versions from 1.16.5 and above.
-
-You can open an issue if you want support for specific version in that range that isn't supported yet.
-
-### Can you add integration with LLM?
-no.
-
-
-## Other useful files
-
-### [Usage Guide](usage.md)
-
-### [TODO's/Future Features](TODO.md)
-
-### [Development Guide](develop.md)
+- [x] Merge the MiranCZ's altoclef and 3ndetz's autoclef branches and make it work
+- [ ] Rename the old repo to autoclef-old and this repo to the autoclef Because now it is the AutoClef.
+- [ ] Improve PVP and movement system to support [Tungsten](https://github.com/Hackerokuz/Tungsten/tree/server-side) project for EXTRA-complex task. Implement Tungsten into the AutoClef project
