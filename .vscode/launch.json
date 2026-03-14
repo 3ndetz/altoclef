@@ -17,6 +17,21 @@
     },
     {
       "type": "java",
+      "name": "Release 1.21 (build + publish)",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/versions/1.21/run",
+      "console": "internalConsole",
+      "stopOnEntry": false,
+      "mainClass": "net.fabricmc.devlaunchinjector.Main",
+      "vmArgs": "-Dfabric.dli.config=${workspaceFolder}/versions/1.21/.gradle/loom-cache/launch.cfg -Dfabric.dli.env=client -Dfabric.dli.main=net.fabricmc.loader.impl.launch.knot.KnotClient -Dfile.encoding=UTF-8",
+      "osx": {
+        "vmArgs": "-XstartOnFirstThread -Dfabric.dli.config=${workspaceFolder}/versions/1.21/.gradle/loom-cache/launch.cfg -Dfabric.dli.env=client -Dfabric.dli.main=net.fabricmc.loader.impl.launch.knot.KnotClient -Dfile.encoding=UTF-8"
+      },
+      "projectName": "1.21",
+      "preLaunchTask": "GitHub Release 1.21"
+    },
+    {
+      "type": "java",
       "name": "Debug Fabric Client",
       "request": "attach",
       "hostName": "localhost",

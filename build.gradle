@@ -6,6 +6,7 @@ buildscript {
 
     dependencies {
         classpath 'fabric-loom:fabric-loom.gradle.plugin:1.0-SNAPSHOT'
+        classpath 'com.github.breadmoirai:github-release:2.5.2'
     }
 }
 
@@ -239,5 +240,33 @@ publishing {
     repositories {
         // uncomment to publish to the local maven
         // mavenLocal()
+    }
+}
+
+// GitHub Release — only for 1.21 (the primary release version)
+if (project.name == "1.21") {
+    apply plugin: 'com.github.breadmoirai.github-release'
+
+    if (!project.hasProperty('github.token')) {
+        logger.warn('⚠️  github.token not set. GitHub releases will not work.')
+        logger.warn('   Add  github.token=YOUR_TOKEN  to  ~/.gradle/gradle.properties')
+    }
+
+    githubRelease {
+        token = project.hasProperty('github.token') ? project.getProperty('github.token') : ""
+        owner = "3ndetz"
+        repo = "autoclef"
+        tagName = "v${project.mod_version}"
+        releaseName = "AutoClef v${project.mod_version} (MC ${project.name}) ${new Date().format('dd-MM-yyyy')}"
+        releaseAssets = files({ remapJar.archiveFile })
+        targetCommitish = "main"
+        generateReleaseNotes = true
+        body = ""
+        draft = false
+        prerelease = false
+        allowUploadToExisting = false
+        overwrite = false
+        dryRun = false
+        apiEndpoint = "https://api.github.com"
     }
 }

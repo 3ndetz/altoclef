@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build 1.21",
+      "type": "shell",
+      "windows": { "command": "gradlew.bat :1.21:build" },
+      "linux":   { "command": "./gradlew :1.21:build" },
+      "osx":     { "command": "./gradlew :1.21:build" },
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "GitHub Release 1.21",
+      "type": "shell",
+      "windows": { "command": "gradlew.bat :1.21:build :1.21:githubRelease" },
+      "linux":   { "command": "./gradlew :1.21:build :1.21:githubRelease" },
+      "osx":     { "command": "./gradlew :1.21:build :1.21:githubRelease" },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean 1.21",
+      "type": "shell",
+      "windows": { "command": "gradlew.bat :1.21:clean" },
+      "linux":   { "command": "./gradlew :1.21:clean" },
+      "osx":     { "command": "./gradlew :1.21:clean" },
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    }
+  ]
+}
