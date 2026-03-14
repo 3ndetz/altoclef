@@ -79,3 +79,8 @@ See `Releases` section and find the one with `Latest` tag.
 - [x] Merge the MiranCZ's altoclef and 3ndetz's autoclef branches and make it work
 - [ ] Rename the old repo to autoclef-old and this repo to the autoclef Because now it is the AutoClef.
 - [ ] Improve PVP and movement system to support [Tungsten](https://github.com/Hackerokuz/Tungsten/tree/server-side) project for EXTRA-complex task. Implement Tungsten into the AutoClef project
+
+## Known issues
+
+- [ ] SW in-chest stuck
+- [ ] projectile dodging
