@@ -18,6 +18,15 @@ plugins {
 apply plugin: 'fabric-loom'
 apply plugin: 'com.replaymod.preprocess'
 
+// Fix Loom 1.7-SNAPSHOT multi-project bug: run configs environment is null
+// without explicit initialization, causing NPE in Tooling API (VS Code Debug Task)
+loom {
+    runs {
+        client { client() }
+        server { server() }
+    }
+}
+
 preprocess {
     patternAnnotation.set("adris.altoclef.multiversion.Pattern")
 }

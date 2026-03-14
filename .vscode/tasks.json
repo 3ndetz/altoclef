@@ -22,6 +22,24 @@
       "problemMatcher": []
     },
     {
+      "label": "Run Client (Debug Mode)",
+      "type": "shell",
+      "windows": { "command": ".\\gradlew :1.21:runClient --debug-jvm" },
+      "linux":   { "command": "./gradlew :1.21:runClient --debug-jvm" },
+      "osx":     { "command": "./gradlew :1.21:runClient --debug-jvm" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [{ "regexp": "\\b\\B", "file": 1, "location": 2, "message": 3 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Listening for transport dt_socket at address.*",
+          "endsPattern": "^.*Listening for transport dt_socket at address.*"
+        }
+      },
+      "group": "build",
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
       "label": "Clean 1.21",
       "type": "shell",
       "windows": { "command": "gradlew.bat :1.21:clean" },
