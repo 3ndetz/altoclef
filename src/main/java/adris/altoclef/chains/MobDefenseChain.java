@@ -128,6 +128,11 @@ public class MobDefenseChain extends SingleTaskChain {
     @Override
     public float getPriority() {
         cachedLastPriority = getPriorityInner();
+        // If no task was set but a non-zero priority was returned, that's an inconsistent
+        // state — drop priority so we don't claim control without doing anything.
+        if (mainTask == null && cachedLastPriority > 0) {
+            cachedLastPriority = 0;
+        }
         prevHealth = AltoClef.getInstance().getPlayer().getHealth();
         return cachedLastPriority;
     }
@@ -173,7 +178,7 @@ public class MobDefenseChain extends SingleTaskChain {
             return Float.NEGATIVE_INFINITY;
         }
 
-        if (mod.getWorld().getDifficulty() == Difficulty.PEACEFUL) return Float.NEGATIVE_INFINITY;
+        //if (mod.getWorld().getDifficulty() == Difficulty.PEACEFUL) return Float.NEGATIVE_INFINITY;
 
         if (needsChangeOnAttack && (mod.getPlayer().getHealth() < prevHealth || killAura.attackedLastTick)) {
             needsChangeOnAttack = false;
