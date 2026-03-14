@@ -84,3 +84,4 @@ See `Releases` section and find the one with `Latest` tag.
 
 - [ ] SW in-chest stuck
 - [ ] projectile dodging
+- [ ] EpicCamera not working (tp in ~100000 blocks)
