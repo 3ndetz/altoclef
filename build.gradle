@@ -1,5 +1,3 @@
-import com.replaymod.gradle.preprocess.PreprocessTask
-
 buildscript {
     def (major, minor, patch) = project.name.split("-")[0].tokenize('.')
     project.ext.mcVersion = "${major}${minor.padLeft(2, '0')}${(patch ?: '').padLeft(2, '0')}" as int
