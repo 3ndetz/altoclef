@@ -348,6 +348,33 @@ public interface WorldHelper {
         return true;
     }
 
+    // Reliable overload: reads world directly (not BlockScanner) so deep/unloaded blocks are detected.
+    static boolean isHellHole(AltoClef mod, BlockPos pos) {
+        int x = pos.getX(), z = pos.getZ();
+        int count = 0;
+        for (int y = pos.getY(); y >= -64; y--) {
+            net.minecraft.block.BlockState state = mod.getWorld().getBlockState(new BlockPos(x, y, z));
+            if (!state.isAir()) return false;
+            if (++count > 40) return true;
+        }
+        return true;
+    }
+
+    // Returns true when the area around pos is dangerous (void/lava below or very few supporting blocks).
+    static boolean isDangerZone(AltoClef mod, BlockPos pos) {
+        int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        int safeBlockCount = 0;
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos checkPos = new BlockPos(x + dx, y - 1, z + dz);
+                if (mod.getWorld().getBlockState(checkPos).getBlock() == Blocks.LAVA) return true;
+                if (isHellHole(mod, checkPos)) return true;
+                if (!mod.getWorld().getBlockState(checkPos).isAir()) safeBlockCount++;
+            }
+        }
+        return safeBlockCount <= 4;
+    }
+
     static boolean isInteractableBlock(BlockPos pos) {
         Block block = AltoClef.getInstance().getWorld().getBlockState(pos).getBlock();
         return (block instanceof ChestBlock

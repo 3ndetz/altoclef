@@ -224,26 +224,6 @@ public class MobDefenseChain extends SingleTaskChain {
                 return 50 + blowingUp.getClientFuseTime(1) * 50;
             }
         }
-        synchronized (BaritoneHelper.MINECRAFT_LOCK) {
-            // Block projectiles with shield
-            if (mod.getModSettings().isDodgeProjectiles()
-                    && hasShield(mod)
-                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
-                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
-                    && !mod.getEntityTracker().entityFound(PotionEntity.class) && isProjectileClose(mod)) {
-                ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
-                if (shieldSlot.getItem() != Items.SHIELD) {
-                    mod.getSlotHandler().forceEquipItemToOffhand(Items.SHIELD);
-                } else {
-                    startShielding(mod);
-                }
-                return 60;
-            }
-            if (blowingUp == null && !isProjectileClose(mod)) {
-                stopShielding(mod);
-            }
-        }
-
         if (mod.getFoodChain().needsToEat() || mod.getMLGBucketChain().isFalling(mod)
                 || !mod.getMLGBucketChain().doneMLG() || mod.getMLGBucketChain().isChorusFruiting()) {
             killAura.stopShielding(mod);
@@ -251,22 +231,40 @@ public class MobDefenseChain extends SingleTaskChain {
             return Float.NEGATIVE_INFINITY;
         }
 
+        boolean projectileIsClose = isProjectileClose(mod);
+        synchronized (BaritoneHelper.MINECRAFT_LOCK) {
+            // Raise shield only when no active dodge task (matching autoclef: _runAwayTask == null)
+            // This prevents startShielding from calling requestPause() during active DodgeProjectilesTask
+            if (mod.getModSettings().isDodgeProjectiles()
+                    && hasShield(mod)
+                    && runAwayTask == null
+                    && !mod.getPlayer().getItemCooldownManager().isCoolingDown(offhandItem)
+                    && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
+                    && !mod.getEntityTracker().entityFound(PotionEntity.class) && projectileIsClose) {
+                ItemStack shieldSlot = StorageHelper.getItemStackInSlot(PlayerSlot.OFFHAND_SLOT);
+                if (shieldSlot.getItem() != Items.SHIELD) {
+                    mod.getSlotHandler().forceEquipItemToOffhand(Items.SHIELD);
+                } else {
+                    startShielding(mod);
+                }
+            } else if (blowingUp == null && !projectileIsClose) {
+                stopShielding(mod);
+            }
+        }
+
         // Force field
         doForceField(mod);
 
-        // Dodge projectiles
-        if (mod.getPlayer().getHealth() <= 10 && !hasShield(mod)) {
-
-            if (StorageHelper.getNumberOfThrowawayBlocks(mod) > 0 && !mod.getFoodChain().needsToEat()
-                    && mod.getModSettings().isDodgeProjectiles() && isProjectileClose(mod)) {
-                doingFunkyStuff = true;
-                setTask(new ProjectileProtectionWallTask(mod));
+        // Dodge projectiles — only actively move when in a danger zone (void/lava/platform edge)
+        // On solid ground, shield raised above handles it; don't claim priority 65 or block other tasks
+        if (mod.getModSettings().isDodgeProjectiles() && projectileIsClose) {
+            doingFunkyStuff = true;
+            if (WorldHelper.isDangerZone(mod, mod.getPlayer().getBlockPos())) {
+                runAwayTask = new DodgeProjectilesTask(ARROW_KEEP_DISTANCE_HORIZONTAL, ARROW_KEEP_DISTANCE_VERTICAL);
+                setTask(runAwayTask);
                 return 65;
             }
-
-            runAwayTask = new DodgeProjectilesTask(ARROW_KEEP_DISTANCE_HORIZONTAL, ARROW_KEEP_DISTANCE_VERTICAL);
-            setTask(runAwayTask);
-            return 65;
+            // Not a danger zone: shield passively handles it; fall through so other tasks continue
         }
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod) && !escapeDragonBreath(mod) && !mod.getFoodChain().isShouldStop()) {
