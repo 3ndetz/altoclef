@@ -9,6 +9,8 @@ import adris.altoclef.control.InputControls;
 import adris.altoclef.control.PlayerExtraController;
 import adris.altoclef.control.SlotHandler;
 import adris.altoclef.eventbus.EventBus;
+import adris.altoclef.eventbus.events.BlockBrokenEvent;
+import adris.altoclef.eventbus.events.BlockPlaceEvent;
 import adris.altoclef.eventbus.events.ClientRenderEvent;
 import adris.altoclef.eventbus.events.ClientTickEvent;
 import adris.altoclef.eventbus.events.SendChatEvent;
@@ -90,6 +92,7 @@ public class AltoClef implements ModInitializer {
     private FoodChain foodChain;
     private MobDefenseChain mobDefenseChain;
     private MLGBucketFallChain mlgBucketChain;
+    private WorldSurvivalChain worldSurvivalChain;
     // Trackers
     private ItemStorageTracker storageTracker;
     private ContainerSubTracker containerSubTracker;
@@ -242,7 +245,7 @@ public class AltoClef implements ModInitializer {
         mlgBucketChain = new MLGBucketFallChain(taskRunner);
         new UnstuckChain(taskRunner);
         new PreEquipItemChain(taskRunner);
-        new WorldSurvivalChain(taskRunner);
+        worldSurvivalChain = new WorldSurvivalChain(taskRunner);
         foodChain = new FoodChain(taskRunner);
 
         // Trackers
@@ -325,6 +328,10 @@ public class AltoClef implements ModInitializer {
 
         // Render
         EventBus.subscribe(ClientRenderEvent.class, evt -> onClientRenderOverlay(evt.context));
+
+        // Block place/break tracking for protected area avoidance
+        EventBus.subscribe(BlockPlaceEvent.class, evt -> worldSurvivalChain.onBlockPlaced(this, evt.blockPos, evt.blockState));
+        EventBus.subscribe(BlockBrokenEvent.class, evt -> worldSurvivalChain.onBlockBroken(this, evt.blockPos, evt.blockState, evt.player));
 
         // Playground
         Playground.IDLE_TEST_INIT_FUNCTION(this);
