@@ -20,10 +20,13 @@ import java.util.function.Predicate;
 
 
 public class LootContainerTask extends Task {
+    private static final int TIMEOUT_TICKS = 200; // 10 seconds
+
     public final BlockPos chest;
     public final List<Item> targets = new ArrayList<>();
     private final Predicate<ItemStack> check;
     private boolean weDoneHere = false;
+    private int ticksElapsed = 0;
 
     public LootContainerTask(BlockPos chestPos, List<Item> items) {
         chest = chestPos;
@@ -51,6 +54,13 @@ public class LootContainerTask extends Task {
 
     @Override
     protected Task onTick() {
+        ticksElapsed++;
+        if (ticksElapsed > TIMEOUT_TICKS) {
+            setDebugState("Loot timeout — giving up");
+            weDoneHere = true;
+            return null;
+        }
+
         if (!ContainerType.screenHandlerMatches(ContainerType.CHEST)) {
             setDebugState("Interact with container");
             return new InteractWithBlockTask(chest);
@@ -94,9 +104,9 @@ public class LootContainerTask extends Task {
             // Try throwing away cursor slot if it's garbage
             garbage.ifPresent(slot -> mod.getSlotHandler().clickSlot(slot, 0, SlotActionType.PICKUP));
             mod.getSlotHandler().clickSlot(Slot.UNDEFINED, 0, SlotActionType.PICKUP);
-        } else {
-            StorageHelper.closeScreen();
         }
+        // Always close screen to prevent getting stuck with open container
+        StorageHelper.closeScreen();
         mod.getBehaviour().pop();
     }
 

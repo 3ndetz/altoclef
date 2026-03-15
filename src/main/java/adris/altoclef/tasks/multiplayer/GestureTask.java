@@ -137,7 +137,10 @@ public class GestureTask extends Task {
         }
         Rotation lookAtCamera = LookHelper.getLookRotation(mod, lookTarget);
         Vec3d targetVector = lookTarget.subtract(mod.getPlayer().getPos()).normalize();
-        if (LookHelper.cleanLineOfSight(lookTarget, 100d)) {
+        double targetDist = mod.getPlayer().getPos().distanceTo(lookTarget);
+        // Clamp camera distance to prevent teleporting ~100000 blocks away
+        double maxCameraDist = 20.0;
+        if (LookHelper.cleanLineOfSight(lookTarget, 100d) && targetDist <= maxCameraDist) {
             // set camera from target if we see target, to show us from target
             mod.getBehaviour().setCameraPositionModifer(
                     lookTarget.add(targetVector.multiply(1)));

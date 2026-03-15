@@ -23,10 +23,14 @@ public class ProjectileHelper {
 
     // If we shoot on a 2d plane, what is the 2d point on that trajectory closest to our player pos?
     private static Vec3d getClosestPointOnFlatLine(double shootX, double shootZ, double velX, double velZ, double playerX, double playerZ) {
+        double denom = velX * velX + velZ * velZ;
+        // Guard: projectile with no horizontal velocity (straight up/down) — return shoot origin
+        if (denom < 1e-10) {
+            return new Vec3d(shootX, 0, shootZ);
+        }
         double deltaX = playerX - shootX,
                 deltaZ = playerZ - shootZ;
-        // Did da math I am smurt boi who knows basic calculus
-        double t = ((velX * deltaX) + (velZ * deltaZ)) / (velX * velX + velZ * velZ);
+        double t = ((velX * deltaX) + (velZ * deltaZ)) / denom;
 
         double hitX = shootX + velX * t,
                 hitZ = shootZ + velZ * t;
