@@ -333,6 +333,10 @@ public class AltoClef implements ModInitializer {
         EventBus.subscribe(BlockPlaceEvent.class, evt -> worldSurvivalChain.onBlockPlaced(this, evt.blockPos, evt.blockState));
         EventBus.subscribe(BlockBrokenEvent.class, evt -> worldSurvivalChain.onBlockBroken(this, evt.blockPos, evt.blockState, evt.player));
 
+        // Projectile detection — instant reaction to incoming arrows
+        EventBus.subscribe(adris.altoclef.eventbus.events.multiplayer.ProjectileEvent.class, evt ->
+                getMobDefenseChain().onProjectileLaunched(this, evt.entity, evt.sticked));
+
         // Playground
         Playground.IDLE_TEST_INIT_FUNCTION(this);
 

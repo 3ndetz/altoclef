@@ -408,6 +408,40 @@ public class EntityTracker extends Tracker {
         }
     }
 
+    /**
+     * Add a projectile from event (instant detection, before next tick poll).
+     * Filters out own projectiles, ground-stuck, and harmless types.
+     */
+    public boolean addProjectile(ProjectileEntity projEntity) {
+        CachedProjectile proj = new CachedProjectile();
+
+        boolean inGround = false;
+        if (projEntity instanceof PersistentProjectileEntity) {
+            inGround = ((PersistentProjectileEntityAccessor) projEntity).isInGround();
+        }
+
+        // Ignore harmless projectiles
+        if (projEntity instanceof FishingBobberEntity || projEntity instanceof EnderPearlEntity || projEntity instanceof ExperienceBottleEntity)
+            return false;
+
+        // Ignore own projectiles
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player != null && projEntity.getOwner() == mc.player)
+            return false;
+
+        if (!inGround) {
+            proj.position = projEntity.getPos();
+            proj.velocity = projEntity.getVelocity();
+            proj.gravity = ProjectileHelper.hasGravity(projEntity) ? ProjectileHelper.ARROW_GRAVITY_ACCEL : 0;
+            proj.projectileType = projEntity.getClass();
+            synchronized (BaritoneHelper.MINECRAFT_LOCK) {
+                projectiles.add(proj);
+            }
+            return true;
+        }
+        return false;
+    }
+
     @Override
     protected void reset() {
         // Dirty clears everything else.

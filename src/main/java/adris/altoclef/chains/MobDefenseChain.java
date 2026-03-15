@@ -34,6 +34,7 @@ import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.*;
 import net.minecraft.entity.projectile.thrown.PotionEntity;
 import net.minecraft.item.Item;
@@ -403,6 +404,12 @@ public class MobDefenseChain extends SingleTaskChain {
         }
 
         return 0;
+    }
+
+    /** Called from ProjectileEvent subscription — instant projectile detection. */
+    public void onProjectileLaunched(AltoClef mod, ProjectileEntity arrowEntity, boolean sticked) {
+        if (!sticked)
+            mod.getEntityTracker().addProjectile(arrowEntity);
     }
 
     private static boolean hasShield(AltoClef mod) {
