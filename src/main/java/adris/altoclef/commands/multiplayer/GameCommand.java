@@ -4,19 +4,20 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.ChoiceArg;
 import adris.altoclef.commandsystem.exception.CommandException;
-import adris.altoclef.tasks.multiplayer.minigames.BedWarsTask;
-import adris.altoclef.tasks.multiplayer.minigames.KitPVPTask;
-import adris.altoclef.tasks.multiplayer.minigames.MurderMysteryTask;
-import adris.altoclef.tasks.multiplayer.minigames.SkyWarsTask;
+import adris.altoclef.tasks.multiplayer.minigames.*;
 import adris.altoclef.tasks.speedrun.beatgame.BeatMinecraftTask;
 import adris.altoclef.util.agent.Pipeline;
 import net.minecraft.util.math.BlockPos;
 
 public class GameCommand extends Command {
     public GameCommand() {
-        super("game", "Run the main game or minigame pipeline (task chain)", new StringArg("pipeline", ""));
+        super("game", "Run the main game or minigame pipeline (task chain)",
+                new ChoiceArg("pipeline", "", java.util.List.of(
+                        "none", "sw", "swt", "skywars", "mm", "murder",
+                        "bw", "bedwars", "kpvp", "kitpvp", "thepit", "pit",
+                        "skypvp", "megabattle", "speedrun")));
     }
 
     @Override
@@ -64,6 +65,10 @@ public class GameCommand extends Command {
             case "thepit", "pit":
                 Debug.logMessage("Pipeline set to ThePit");
                 mod.runUserTask(new SkyWarsTask(mod.getPlayer().getBlockPos(), true, false), this::finish);
+                break;
+            case "skypvp", "sky_pvp":
+                Debug.logMessage("Pipeline set to SkyPvP (MineLegacy)");
+                mod.runUserTask(new SkyPvpTask(), this::finish);
                 break;
             case "megabattle", "mega", "evil", "yandere":
                 AltoClef.setPipeline(Pipeline.BattleRoyale);

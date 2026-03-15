@@ -4,12 +4,15 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.args.ChoiceArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.tasks.construction.PlaceSignTask;
 import adris.altoclef.tasks.construction.compound.ConstructGraveTask;
 import adris.altoclef.tasks.construction.compound.ConstructIronGolemTask;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask;
 import adris.altoclef.tasks.misc.PlaceBedAndSetSpawnTask;
+
+import java.util.List;
 
 /*
  * build <structure> [text / args]
@@ -26,7 +29,8 @@ public class BuildCommand extends Command {
     private String _capturedArgs = null;
 
     public BuildCommand() {
-        super("build", "Build a specific structure (grave/sign/golem/bed/portal)");
+        super("build", "Build a specific structure (grave/sign/golem/bed/portal)",
+                new ChoiceArg("structure", List.of("grave", "sign", "golem", "bed", "portal")));
     }
 
     @Override
