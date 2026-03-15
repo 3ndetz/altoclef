@@ -74,8 +74,8 @@ public class SkyPvpTask extends Task {
             return _pickupTask;
         }
 
-        // Find target
-        Optional<Entity> target = findTarget(mod, weAreInSpawn, weHaveArmor);
+        // Find target (can target enemies outside spawn even if we're in spawn)
+        Optional<Entity> target = findTarget(mod, weHaveArmor);
 
         if (target.isPresent()) {
             PlayerEntity enemy = (PlayerEntity) target.get();
@@ -117,7 +117,7 @@ public class SkyPvpTask extends Task {
 
     // ── target selection ─────────────────────────────────────────────────────
 
-    private Optional<Entity> findTarget(AltoClef mod, boolean weInSpawn, boolean weHaveArmor) {
+    private Optional<Entity> findTarget(AltoClef mod, boolean weHaveArmor) {
         Optional<Entity> bestUnarmored = Optional.empty();
         Optional<Entity> bestArmored = Optional.empty();
         double bestUnarmoredDist = Double.MAX_VALUE;
@@ -130,11 +130,8 @@ public class SkyPvpTask extends Task {
             double dist = mod.getPlayer().getPos().distanceTo(enemyPos);
             if (dist > TARGET_RANGE) continue;
 
-            // Don't attack players inside spawn zone
+            // Don't attack players inside spawn zone (they're protected)
             if (enemyPos.distanceTo(SPAWN) < SPAWN_SAFE_RADIUS) continue;
-
-            // Don't start attack if WE are in spawn zone
-            if (weInSpawn) continue;
 
             boolean enemyArmored = hasAnyArmorEntity(player);
 
