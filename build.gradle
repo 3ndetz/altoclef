@@ -102,6 +102,11 @@ repositories {
     flatDir {
         dirs '../baritone/dist'
     }
+    // Tungsten local maven (for Baritone JAR shared between Tungsten and altoclef)
+    maven {
+        name = 'BaritoneLocalMaven'
+        url = file('../baritone_altoclef/maven')
+    }
 }
 
 jvmdg {
@@ -157,6 +162,13 @@ dependencies {
     }
     //modImplementation 'baritone-api-fabric:baritone-api-fabric:1.6.3'
     //implementation files('baritone-plus/build/libs/baritone-unoptimized-fabric-1.6.3.jar')
+
+    // Tungsten pathfinder — compile-time dependency for IDE visibility.
+    // Build Tungsten first: cd ../Tungsten && gradlew build
+    // At runtime, Tungsten runs as a separate mod (its own JAR in mods/).
+    if (project.name == "1.21") {
+        modImplementation files('../Tungsten/build/libs/tungsten-fabric-ALPHA-1.6.0-1.21compat.jar')
+    }
 }
 shadowJar {
     configurations = [project.configurations.shadow]
