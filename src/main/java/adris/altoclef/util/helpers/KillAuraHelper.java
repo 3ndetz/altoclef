@@ -28,6 +28,9 @@ public abstract class KillAuraHelper {
     private static final TimerGame _rotatedMoveTimer = new TimerGame(1);
     private static Input _rotatedMove = Input.MOVE_RIGHT;
 
+    // Track whether combat movement is active (for cleanup)
+    private static boolean _combatMovementActive = false;
+
     public static boolean ElapsedPvpCD() {
         return _CooldownFor18.elapsed();
     }
@@ -71,8 +74,6 @@ public abstract class KillAuraHelper {
         }
     }
 
-    public static long JumpTimerStarted = -1;
-
     public static Input getRotatedMove() {
         if (_rotatedMoveTimer.elapsed()) {
             _rotatedMoveTimer.reset();
@@ -81,28 +82,26 @@ public abstract class KillAuraHelper {
         return _rotatedMove;
     }
 
+    /**
+     * Tick-based PvP combat movement: sprint + forward + jump for crits.
+     * Call this every tick during combat. No threads, no delays.
+     * Keys stay held as long as this is called; call stopCombatMovement() when done.
+     */
     public static void GoJump(AltoClef mod, boolean rotated, boolean jump) {
-        if (JumpTimerStarted == -1) {
-            JumpTimerStarted = System.currentTimeMillis();
+        _combatMovementActive = true;
+
+        // Always sprint forward
+        mod.getInputControls().hold(Input.SPRINT);
+        mod.getInputControls().hold(Input.MOVE_FORWARD);
+
+        // Jump for crits when on ground
+        if (jump && mod.getPlayer().isOnGround()) {
+            mod.getInputControls().hold(Input.JUMP);
         }
-        if (System.currentTimeMillis() > JumpTimerStarted + 900) {
-            boolean doJump = jump && mod.getPlayer().isOnGround();
-            boolean highSpeed = mod.getPlayer().getVelocity().horizontalLengthSquared() > 0.02;
-            new Thread(() -> {
-                Input rotatedInp = getRotatedMove();
-                mod.getInputControls().hold(Input.SPRINT);
-                mod.getInputControls().hold(Input.MOVE_FORWARD);
-                if (highSpeed) mod.getInputControls().hold(Input.JUMP);
-                if (rotated) mod.getInputControls().hold(rotatedInp);
-                sleepSec(0.3);
-                if (doJump) mod.getInputControls().hold(Input.JUMP);
-                sleepSec(0.5);
-                if (rotated) mod.getInputControls().release(rotatedInp);
-                mod.getInputControls().release(Input.MOVE_FORWARD);
-                mod.getInputControls().release(Input.SPRINT);
-                mod.getInputControls().release(Input.JUMP);
-            }).start();
-            JumpTimerStarted = -1;
+
+        // Occasional strafing
+        if (rotated) {
+            mod.getInputControls().hold(getRotatedMove());
         }
     }
 
@@ -110,11 +109,20 @@ public abstract class KillAuraHelper {
         GoJump(mod, rotated, false);
     }
 
-    private static void sleepSec(double seconds) {
-        try {
-            Thread.sleep((int) (1000 * seconds));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    /**
+     * Release all combat movement keys. Call when leaving PvP combat.
+     */
+    public static void stopCombatMovement(AltoClef mod) {
+        if (!_combatMovementActive) return;
+        _combatMovementActive = false;
+        mod.getInputControls().release(Input.SPRINT);
+        mod.getInputControls().release(Input.MOVE_FORWARD);
+        mod.getInputControls().release(Input.JUMP);
+        mod.getInputControls().release(Input.MOVE_LEFT);
+        mod.getInputControls().release(Input.MOVE_RIGHT);
+    }
+
+    public static boolean isCombatMovementActive() {
+        return _combatMovementActive;
     }
 }

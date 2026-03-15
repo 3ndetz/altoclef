@@ -33,7 +33,6 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
     // Player PvP strategy fields (player-only)
     private static final TimerGame _attackStrategyTimer = new TimerGame(15);
     private static boolean _aggressiveAttackStrategy = true;
-    private static final TimerGame _getToEntityTimer = new TimerGame(1);
 
     protected AbstractKillEntityTask() {
         this(CONSIDER_COMBAT_RANGE, OTHER_FORCE_FIELD_RANGE);
@@ -167,29 +166,26 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
         boolean directViewing = LookHelper.cleanLineOfSight(player.getBoundingBox().getCenter(), 50.0);
         double dist = player.distanceTo(mod.getPlayer());
 
+        // Always smooth-aim at player during PvP
+        LookHelper.smoothLook(mod, player);
+
+        // Detect whether target is blocking with a shield → prefer axe to break it
+        boolean preferAxe = false;
+        if (player.isUsingItem()) {
+            for (ItemStack stack : player.getHandItems()) {
+                if (stack.isOf(Items.SHIELD)) {
+                    preferAxe = true;
+                    break;
+                }
+            }
+        }
+
+        // Always sprint-jump toward target during PvP (tick-based, no delays)
+        if (dist > 0.5) {
+            KillAuraHelper.GoJump(mod, dist < 4.4, true);
+        }
+
         if (canHit) {
-            // Smooth aim — WindMouse only, no setYaw/setPitch
-            LookHelper.smoothLook(mod, player);
-            _getToEntityTimer.reset();
-
-            // Detect whether target is blocking with a shield → prefer axe to break it
-            boolean preferAxe = false;
-            if (player.isUsingItem()) {
-                for (ItemStack stack : player.getHandItems()) {
-                    if (stack.isOf(Items.SHIELD)) {
-                        preferAxe = true;
-                        break;
-                    }
-                }
-            }
-
-            // Sprint-jump/strafe toward target
-            if (!mod.getClientBaritone().getPathingBehavior().isPathing()) {
-                if (dist > 0.5) {
-                    KillAuraHelper.GoJump(mod, dist < 4.4, true);
-                }
-            }
-
             // Attack when cooldown ready and target not already flashing (hurtTime)
             if (!equipWeapon(mod, preferAxe)) {
                 float hitProg = mod.getPlayer().getAttackCooldownProgress(0);
@@ -200,17 +196,13 @@ public abstract class AbstractKillEntityTask extends AbstractDoToEntityTask {
                     setDebugState("Waiting for cooldown (PvP)");
                 }
             }
+        } else if (!directViewing || !_aggressiveAttackStrategy) {
+            // Can't see target — fall back to pathfinding
+            KillAuraHelper.stopCombatMovement(mod);
+            setDebugState("Cannot hit player, getting closer");
+            return new GetToEntityTask(player);
         } else {
-            // Can't hit from here
-            if (directViewing && _aggressiveAttackStrategy) {
-                // Leap toward player while aiming
-                setDebugState("Leaping at player!");
-                LookHelper.smoothLook(mod, player);
-                KillAuraHelper.GoJump(mod, dist < 4.4, true);
-            } else {
-                setDebugState("Cannot hit player, getting closer");
-                return new GetToEntityTask(player);
-            }
+            setDebugState("Leaping at player!");
         }
         return null;
     }

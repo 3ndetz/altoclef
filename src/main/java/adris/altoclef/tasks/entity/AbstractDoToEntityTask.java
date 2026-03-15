@@ -8,6 +8,7 @@ import adris.altoclef.tasks.speedrun.beatgame.BeatMinecraftTask;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.ItemHelper;
+import adris.altoclef.util.helpers.KillAuraHelper;
 import adris.altoclef.util.helpers.LookHelper;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
@@ -171,6 +172,7 @@ public abstract class AbstractDoToEntityTask extends Task implements ITaskRequir
 
         mod.getMobDefenseChain().setTargetEntity(null);
         mod.getMobDefenseChain().resetForceField();
+        KillAuraHelper.stopCombatMovement(mod);
     }
 
     protected abstract Optional<Entity> getEntityTarget(AltoClef mod);
