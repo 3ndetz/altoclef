@@ -108,6 +108,12 @@ public abstract class Command {
                 return Stream.empty();
             }
 
+            // If this arg was consumed but it's the last arg and user is still typing
+            // (no trailing space, no more tokens), keep showing suggestions for filtering.
+            if (result == Arg.ParseResult.CONSUMED && !reader.hasNext() && !line.endsWith(" ")) {
+                return arg.getSuggestions(reader);
+            }
+
             if (result == Arg.ParseResult.NOT_FINISHED) {
                 if (reader.hasNext()) {
                     if (i == args.length - 1) {
