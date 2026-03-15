@@ -85,6 +85,7 @@ def getJavaVersion() {
 
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         name = "MiranCZRepo"
@@ -163,11 +164,11 @@ dependencies {
     //modImplementation 'baritone-api-fabric:baritone-api-fabric:1.6.3'
     //implementation files('baritone-plus/build/libs/baritone-unoptimized-fabric-1.6.3.jar')
 
-    // Tungsten pathfinder — compile-time dependency for IDE visibility.
-    // Build Tungsten first: cd ../Tungsten && gradlew build
-    // At runtime, Tungsten runs as a separate mod (its own JAR in mods/).
+    // Tungsten pathfinder — bundled inside altoclef JAR via Jar-in-Jar.
+    // Publish first: cd ../Tungsten && gradlew publishToMavenLocal
     if (project.name == "1.21") {
-        modImplementation files("${rootProject.projectDir}/../Tungsten/build/libs/tungsten-fabric-ALPHA-1.6.0-1.21compat.jar")
+        modImplementation "com.example:Tungsten:ALPHA-1.6.0-1.21compat"
+        include "com.example:Tungsten:ALPHA-1.6.0-1.21compat"
     }
 }
 shadowJar {

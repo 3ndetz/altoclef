@@ -37,13 +37,8 @@ AUTOCLEF_UPD/
 ## Step 1 — Clone everything (one time)
 
 ```bash
-git clone https://github.com/3ndetz/autoclef    altoclef
-git clone https://github.com/3ndetz/Tungsten     Tungsten
-git clone https://github.com/3ndetz/baritone_altoclef
-
-cd baritone_altoclef
-git submodule update --init
-cd ..
+git clone --recurse-submodules https://github.com/3ndetz/AUTOCLEF_UPD
+cd AUTOCLEF_UPD
 ```
 
 `baritone_altoclef/maven/` already contains a prebuilt
@@ -52,17 +47,19 @@ unless you change its source code.
 
 ---
 
-## Step 2 — Build Tungsten
+## Step 2 — Build & publish Tungsten to local Maven
 
 ```bash
 cd Tungsten
-gradlew.bat build           # Windows
-./gradlew build             # Linux/Mac
+gradlew.bat publishToMavenLocal     # Windows
+./gradlew publishToMavenLocal       # Linux/Mac
 ```
 
-Output JAR: `Tungsten/build/libs/tungsten-fabric-ALPHA-1.6.0-1.21compat.jar`
+altoclef pulls Tungsten from `~/.m2/repository/` (local Maven) and bundles it
+inside the final JAR via Jar-in-Jar. **One mod = everything.**
 
-This JAR is what altoclef references as a dependency.
+**After every Tungsten code change**, re-run `publishToMavenLocal` so altoclef
+picks up the new version.
 
 ---
 
@@ -70,12 +67,12 @@ This JAR is what altoclef references as a dependency.
 
 ```bash
 cd altoclef
-gradlew.bat runClient       # Windows
-./gradlew runClient         # Linux/Mac
+gradlew.bat :1.21:runClient       # Windows
+./gradlew :1.21:runClient         # Linux/Mac
 ```
 
 altoclef pulls Baritone from `baritone_altoclef/maven/` and Tungsten
-from `Tungsten/build/libs/` automatically (see `build.gradle`).
+from local Maven automatically (see `build.gradle`).
 
 ---
 
@@ -83,8 +80,8 @@ from `Tungsten/build/libs/` automatically (see `build.gradle`).
 
 | What you changed | What to rebuild |
 |---|---|
-| altoclef source | `cd altoclef && gradlew build` |
-| Tungsten source | `cd Tungsten && gradlew build`, then rebuild altoclef |
+| altoclef source | `cd altoclef && gradlew :1.21:build` |
+| Tungsten source | `cd Tungsten && gradlew publishToMavenLocal`, then rebuild altoclef |
 | Baritone source | See "Rebuilding Baritone" below, then rebuild altoclef |
 
 ---
@@ -123,9 +120,9 @@ cp baritone/fabric/build/libs/baritone-unoptimized-fabric-fabric-*.jar \
 ## How dependencies flow
 
 ```
-altoclef
+altoclef (final JAR bundles everything)
   ├── Baritone JAR        <- from baritone_altoclef/maven/ (local maven)
-  ├── Tungsten JAR        <- from Tungsten/build/libs/ (local file)
+  ├── Tungsten JAR        <- from ~/.m2/ (publishToMavenLocal)
   └── Fabric API, MC      <- from internet (cached)
 
 Tungsten
@@ -135,9 +132,6 @@ Tungsten
 
 Both altoclef and Tungsten depend on the same Baritone JAR.
 This is a **diamond dependency** (not circular) — no conflicts.
-
-When running as two separate mods: each bundles its own copy of Baritone.
-Fabric Jar-in-Jar deduplicates automatically.
 
 > **Note:** Tungsten's Baritone fallback is **disabled by default**
 > (`baritoneEnabled = false` in `tungsten.json`). When embedded in
@@ -150,9 +144,8 @@ Fabric Jar-in-Jar deduplicates automatically.
 
 | Project | Output JAR | Location |
 |---|---|---|
-| altoclef | `altoclef-1.21-0.19.jar` | `altoclef/build/libs/` |
+| altoclef | `altoclef-1.21-0.19.jar` (bundles Tungsten + Baritone) | `altoclef/build/libs/` |
 | Tungsten | `tungsten-fabric-ALPHA-1.6.0-1.21compat.jar` | `Tungsten/build/libs/` |
 | Baritone | `baritone-unoptimized-fabric-1.21.jar` | `baritone_altoclef/maven/…/` |
 
-Drop both altoclef and Tungsten JARs into `.minecraft/mods/` to run.
-Baritone is bundled inside both JARs automatically.
+Drop **only the altoclef JAR** into `.minecraft/mods/` — Tungsten and Baritone are bundled inside.

@@ -4,6 +4,7 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.baritone.GoalFollowEntity;
+import adris.altoclef.util.helpers.TungstenHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import baritone.api.utils.input.Input;
@@ -98,6 +99,7 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected void onStart() {
         AltoClef.getInstance().getClientBaritone().getPathingBehavior().forceCancel();
+        TungstenHelper.reset();
         _progress.reset();
         stuckCheck.reset();
         _wanderTask.resetWander();
@@ -144,6 +146,13 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
             }
             stuckCheck.reset();
         }
+        // If Tungsten is actively pathfinding, let it work
+        if (TungstenHelper.isActive()) {
+            _progress.reset();
+            setDebugState("Tungsten fallback pathfinding...");
+            return null;
+        }
+
         if (_wanderTask.isActive() && !_wanderTask.isFinished()) {
             _progress.reset();
             setDebugState("Failed to get to target, wandering for a bit.");
@@ -156,9 +165,16 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
 
         if (mod.getPlayer().isInRange(_entity, _closeEnoughDistance)) {
             _progress.reset();
+            TungstenHelper.stop();
         }
 
         if (!_progress.check(mod)) {
+            // Baritone failed — try Tungsten before wandering
+            if (TungstenHelper.tryPathToEntity(_entity)) {
+                mod.getClientBaritone().getPathingBehavior().forceCancel();
+                setDebugState("Baritone stuck, trying Tungsten...");
+                return null;
+            }
             return _wanderTask;
         }
 
@@ -169,6 +185,7 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
     @Override
     protected void onStop(Task interruptTask) {
         AltoClef.getInstance().getClientBaritone().getPathingBehavior().forceCancel();
+        TungstenHelper.stop();
     }
 
     @Override

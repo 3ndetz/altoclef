@@ -6,6 +6,7 @@ import adris.altoclef.control.InputControls;
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import adris.altoclef.tasksystem.ITaskRequiresGrounded;
 import adris.altoclef.tasksystem.Task;
+import adris.altoclef.util.helpers.TungstenHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
 import baritone.api.pathing.goals.Goal;
@@ -100,6 +101,7 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     @Override
     protected void onStart() {
         AltoClef.getInstance().getClientBaritone().getPathingBehavior().forceCancel();
+        TungstenHelper.reset();
         checker.reset();
         stuckCheck.reset();
     }
@@ -150,10 +152,18 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
             cachedGoal = newGoal(mod);
         }
 
+        // If Tungsten is actively pathfinding, let it work
+        if (TungstenHelper.isActive()) {
+            checker.reset();
+            setDebugState("Tungsten fallback pathfinding...");
+            return null;
+        }
+
         if (wander) {
             if (isFinished()) {
                 // Don't wander if we've reached our goal.
                 checker.reset();
+                TungstenHelper.stop();
             } else {
                 if (wanderTask.isActive() && !wanderTask.isFinished()) {
                     setDebugState("Wandering...");
@@ -161,6 +171,23 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
                     return wanderTask;
                 }
                 if (!checker.check(mod)) {
+                    // Baritone failed — try Tungsten before wandering
+                    if (cachedGoal != null) {
+                        var player = mod.getPlayer();
+                        var goalPos = new net.minecraft.util.math.Vec3d(
+                                player.getX(), player.getY(), player.getZ());
+                        // Try to extract goal position from cachedGoal for Tungsten
+                        if (cachedGoal instanceof baritone.api.pathing.goals.GoalBlock gb) {
+                            goalPos = new net.minecraft.util.math.Vec3d(gb.x, gb.y, gb.z);
+                        } else if (cachedGoal instanceof baritone.api.pathing.goals.GoalGetToBlock gg) {
+                            goalPos = new net.minecraft.util.math.Vec3d(gg.x, gg.y, gg.z);
+                        }
+                        if (TungstenHelper.tryPathTo(goalPos)) {
+                            mod.getClientBaritone().getPathingBehavior().forceCancel();
+                            setDebugState("Baritone stuck, trying Tungsten...");
+                            return null;
+                        }
+                    }
                     Debug.logMessage("Failed to make progress on goal, wandering.");
                     onWander(mod);
                     return wanderTask;
@@ -186,6 +213,7 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
     @Override
     protected void onStop(Task interruptTask) {
         AltoClef.getInstance().getClientBaritone().getPathingBehavior().forceCancel();
+        TungstenHelper.stop();
     }
 
     protected abstract Goal newGoal(AltoClef mod);
