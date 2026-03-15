@@ -317,6 +317,9 @@ public class GestureTask extends Task {
         mod.getInputControls().release(Input.SNEAK);
         mod.getInputControls().release(Input.MOVE_FORWARD);
         mod.getInputControls().release(Input.SPRINT);
+        // Reset camera modifiers so EpicCamera returns to normal orbital mode
+        mod.getBehaviour().resetCameraPositionModifer();
+        mod.getBehaviour().resetCameraRotationModifer();
         mod.getBehaviour().pop();
         //EpicCamera.getInstance().forceStopFreezing();  // Phase 4 stub
     }

@@ -116,7 +116,10 @@ public class EpicCamera {
             if (modifierRotation.getPitch() != -500) pitch = modifierRotation.getPitch();
         }
         if (modifierPos != null) {
-            headPos = modifierPos;
+            // Sanity check: don't teleport camera more than 50 blocks from player
+            if (modifierPos.squaredDistanceTo(headPos) < 50 * 50) {
+                headPos = modifierPos;
+            }
         }
         // Smooth orbit radius
         orbitRadius = MathHelper.lerp(smoothFactor, orbitRadius, targetRadius);
