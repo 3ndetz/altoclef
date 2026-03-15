@@ -105,7 +105,7 @@ repositories {
     // Tungsten local maven (for Baritone JAR shared between Tungsten and altoclef)
     maven {
         name = 'BaritoneLocalMaven'
-        url = file('../baritone_altoclef/maven')
+        url = file("${rootProject.projectDir}/../baritone_altoclef/maven")
     }
 }
 
@@ -167,7 +167,7 @@ dependencies {
     // Build Tungsten first: cd ../Tungsten && gradlew build
     // At runtime, Tungsten runs as a separate mod (its own JAR in mods/).
     if (project.name == "1.21") {
-        modImplementation files('../Tungsten/build/libs/tungsten-fabric-ALPHA-1.6.0-1.21compat.jar')
+        modImplementation files("${rootProject.projectDir}/../Tungsten/build/libs/tungsten-fabric-ALPHA-1.6.0-1.21compat.jar")
     }
 }
 shadowJar {
