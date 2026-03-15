@@ -3,7 +3,7 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
 import net.minecraft.util.math.Vec3d;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class CheckPlayerCommand extends Command {
     public CheckPlayerCommand() {
-        super("check_player", "Checks the status of some player", new StringArg("username", null));
+        super("check_player", "Checks the status of some player", new PlayerArg("username", null));
     }
 
     @Override

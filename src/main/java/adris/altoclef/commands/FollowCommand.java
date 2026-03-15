@@ -4,13 +4,13 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
 import adris.altoclef.commandsystem.exception.CommandException;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.tasks.movement.FollowPlayerTask;
 
 public class FollowCommand extends Command {
     public FollowCommand() {
         super("follow", "Follows you or someone else",
-                new StringArg("username", null)
+                new PlayerArg("username", null)
         );
     }
 

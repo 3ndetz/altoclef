@@ -9,6 +9,9 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
 
     private final double _distanceHorizontal;
     private final double _distanceVertical;
+    /** Max time (ms) before dodge is considered done — prevents blocking other tasks. */
+    private static final long DODGE_TIMEOUT_MS = 5000;
+    private long startTime;
 
     public DodgeProjectilesTask(double distanceHorizontal, double distanceVertical) {
         _distanceHorizontal = distanceHorizontal;
@@ -16,21 +19,30 @@ public class DodgeProjectilesTask extends CustomBaritoneGoalTask {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        startTime = System.currentTimeMillis();
+    }
+
+    @Override
     protected Task onTick() {
         if (cachedGoal != null) {
-            // EntityTracker runs ensureUpdated automatically which calls updateState which locks the mutex,
-            // so don't lock here.
-            // Multithreading can be a hassle in more ways than one it seems.
             GoalDodgeProjectiles goal = (GoalDodgeProjectiles) cachedGoal;
         }
         return super.onTick();
+    }
+
+    @Override
+    public boolean isFinished() {
+        // Timeout: don't block other tasks forever
+        if (System.currentTimeMillis() - startTime > DODGE_TIMEOUT_MS) return true;
+        return super.isFinished();
     }
 
     @SuppressWarnings("RedundantIfStatement")
     @Override
     protected boolean isEqual(Task other) {
         if (other instanceof DodgeProjectilesTask task) {
-            //if (task._mob.getPos().squaredDistanceTo(_mob.getPos()) > 0.5) return false;
             if (Math.abs(task._distanceHorizontal - _distanceHorizontal) > 1) return false;
             if (Math.abs(task._distanceVertical - _distanceVertical) > 1) return false;
             return true;

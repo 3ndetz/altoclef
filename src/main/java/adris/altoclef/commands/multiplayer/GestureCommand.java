@@ -4,6 +4,7 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.args.StringArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
@@ -16,7 +17,7 @@ import java.util.Optional;
 public class GestureCommand extends Command {
     public GestureCommand() {
         super("gesture", "Show gesture to someone",
-                new StringArg("username", null),
+                new PlayerArg("username", null),
                 new StringArg("gesture", "Hey"));
     }
 

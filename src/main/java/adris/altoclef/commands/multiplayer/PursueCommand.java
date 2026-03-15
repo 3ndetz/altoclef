@@ -3,13 +3,13 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.tasks.movement.IdleTask;
 
 public class PursueCommand extends Command {
     public PursueCommand() {
-        super("pursue", "Pursues someone", new StringArg("username", null));
+        super("pursue", "Pursues someone", new PlayerArg("username", null));
     }
 
     @Override

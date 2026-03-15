@@ -18,7 +18,7 @@ public class GiveCommand extends Command {
 
     public GiveCommand() {
         super("give", "Collect an item and give it to you or someone else",
-                new StringArg("username"),
+                new PlayerArg("username"),
                 new ListArg<>(new ItemTargetArg("items"), "items"),
                 new GoToTargetArg("cordinates", null, false)
         );

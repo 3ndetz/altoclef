@@ -3,7 +3,7 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
 import adris.altoclef.tasks.entity.ShootArrowSimpleProjectileTask;
@@ -16,7 +16,7 @@ import static adris.altoclef.tasks.entity.ShootArrowSimpleProjectileTask.readyFo
 
 public class ShootCommand extends Command {
     public ShootCommand() {
-        super("shoot", "Shoot a player with bow", new StringArg("playerName"));
+        super("shoot", "Shoot a player with bow", new PlayerArg("playerName"));
     }
 
     @Override

@@ -3,7 +3,7 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
-import adris.altoclef.commandsystem.args.StringArg;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
 import adris.altoclef.tasks.movement.ThrowEnderPearlSimpleProjectileTask;
@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class PearlCommand extends Command {
     public PearlCommand() {
-        super("pearl", "Tp to player using enderpearl", new StringArg("playerName"));
+        super("pearl", "Tp to player using enderpearl", new PlayerArg("playerName"));
     }
 
     @Override

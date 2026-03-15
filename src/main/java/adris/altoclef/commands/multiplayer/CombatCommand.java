@@ -3,6 +3,7 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.args.StringArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
@@ -13,7 +14,7 @@ public class CombatCommand extends Command {
     public CombatCommand() {
         super("combat", "Combat mode with configurable options",
             new StringArg("mode", "all"),
-            new StringArg("target", null),
+            new PlayerArg("target", null),
             new StringArg("graves", "on"),
             new StringArg("gestures", "on")
         );

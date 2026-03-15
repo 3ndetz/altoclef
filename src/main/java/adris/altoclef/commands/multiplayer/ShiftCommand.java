@@ -3,6 +3,7 @@ package adris.altoclef.commands.multiplayer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.args.PlayerArg;
 import adris.altoclef.commandsystem.args.StringArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.commandsystem.exception.RuntimeCommandException;
@@ -14,7 +15,7 @@ import java.util.Optional;
 public class ShiftCommand extends Command {
     public ShiftCommand() {
         super("shift", "Shifts near a player (back/forward/any)",
-                new StringArg("username"),
+                new PlayerArg("username"),
                 new StringArg("type", "back"));
     }
 

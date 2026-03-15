@@ -271,6 +271,10 @@ public class MobDefenseChain extends SingleTaskChain {
             }
             // Not a danger zone: shield passively handles it; fall through so other tasks continue
         }
+        // Projectile threat gone — clear stale dodge task so it doesn't block other chains
+        if (runAwayTask instanceof DodgeProjectilesTask && !projectileIsClose) {
+            runAwayTask = null;
+        }
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod) && !escapeDragonBreath(mod) && !mod.getFoodChain().isShouldStop()) {
             if (targetEntity == null || WorldHelper.isSurroundedByHostiles()) {
