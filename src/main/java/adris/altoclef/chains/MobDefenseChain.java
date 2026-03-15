@@ -57,6 +57,8 @@ public class MobDefenseChain extends SingleTaskChain {
     private static final double CREEPER_KEEP_DISTANCE = 10;
     private static final double ARROW_KEEP_DISTANCE_HORIZONTAL = 2;
     private static final double ARROW_KEEP_DISTANCE_VERTICAL = 10;
+    // Wider detection radius for arrow approach (from autoclef: horizontalDistanceSq < 1000)
+    private static final double ARROW_DETECT_HORIZONTAL_SQ = 1000;
     private static final double SAFE_KEEP_DISTANCE = 8;
     private static final List<Class<? extends Entity>> ignoredMobs = List.of(Entities.WARDEN, WitherEntity.class, EndermanEntity.class, BlazeEntity.class,
             WitherSkeletonEntity.class, HoglinEntity.class, ZoglinEntity.class, PiglinBruteEntity.class, VindicatorEntity.class, MagmaCubeEntity.class);
@@ -265,16 +267,21 @@ public class MobDefenseChain extends SingleTaskChain {
         // Force field
         doForceField(mod);
 
-        // Dodge projectiles — only actively move when in a danger zone (void/lava/platform edge)
-        // On solid ground, shield raised above handles it; don't claim priority 65 or block other tasks
+        // Dodge projectiles (ported from autoclef: direct sprint+jump sideways, or baritone in danger zones)
         if (mod.getModSettings().isDodgeProjectiles() && projectileIsClose) {
             doingFunkyStuff = true;
             if (WorldHelper.isDangerZone(mod, mod.getPlayer().getBlockPos())) {
+                // Danger zone (void/lava/edge): use baritone pathfinding to dodge safely
                 runAwayTask = new DodgeProjectilesTask(ARROW_KEEP_DISTANCE_HORIZONTAL, ARROW_KEEP_DISTANCE_VERTICAL);
                 setTask(runAwayTask);
-                return 65;
+            } else if (suggestedProjectileRotation != null) {
+                // Safe ground: instant sprint+jump perpendicular to arrow (from autoclef)
+                LookHelper.lookAt(mod, suggestedProjectileRotation, false);
+                mod.getInputControls().tryPress(Input.SPRINT);
+                mod.getInputControls().tryPress(Input.MOVE_FORWARD);
+                mod.getInputControls().tryPress(Input.JUMP);
             }
-            // Not a danger zone: shield passively handles it; fall through so other tasks continue
+            return 65;
         }
         // Projectile threat gone — clear stale dodge task so it doesn't block other chains
         if (runAwayTask instanceof DodgeProjectilesTask && !projectileIsClose) {
@@ -553,9 +560,11 @@ public class MobDefenseChain extends SingleTaskChain {
 
     private boolean isProjectileClose(AltoClef mod) {
         List<CachedProjectile> projectiles = mod.getEntityTracker().getProjectiles();
+        Vec3d plyPos = mod.getPlayer().getPos();
         try {
             for (CachedProjectile projectile : projectiles) {
-                if (projectile.position.squaredDistanceTo(mod.getPlayer().getPos()) < 150) {
+                double sqDist = projectile.position.squaredDistanceTo(plyPos);
+                if (sqDist < 150) {
                     boolean isGhastBall = projectile.projectileType == FireballEntity.class;
                     if (isGhastBall) {
                         Optional<Entity> ghastBall = mod.getEntityTracker().getClosestEntity(FireballEntity.class);
@@ -566,15 +575,11 @@ public class MobDefenseChain extends SingleTaskChain {
                             LookHelper.lookAt(mod, ghast.get().getEyePos());
                         }
                         return false;
-                        // Ignore ghast balls
                     }
                     if (projectile.projectileType == DragonFireballEntity.class) {
-                        // Ignore dragon fireballs
                         continue;
                     }
                     if (projectile.projectileType == ArrowEntity.class || projectile.projectileType == SpectralArrowEntity.class || projectile.projectileType == SmallFireballEntity.class) {
-                        // check if the projectile is going away from us
-                        // not so fancy math... this should work better than the previous approach (I hope just adding the velocity doesn't cause any issues..)
                         PlayerEntity player = mod.getPlayer();
                         if (player.squaredDistanceTo(projectile.position) < player.squaredDistanceTo(projectile.position.add(projectile.velocity))) {
                             continue;
@@ -582,17 +587,22 @@ public class MobDefenseChain extends SingleTaskChain {
                     }
 
                     Vec3d expectedHit = ProjectileHelper.calculateArrowClosestApproach(projectile, mod.getPlayer());
-
-                    Vec3d delta = mod.getPlayer().getPos().subtract(expectedHit);
-
+                    Vec3d delta = plyPos.subtract(expectedHit);
                     double horizontalDistanceSq = delta.x * delta.x + delta.z * delta.z;
                     double verticalDistance = Math.abs(delta.y);
-                    if (horizontalDistanceSq < ARROW_KEEP_DISTANCE_HORIZONTAL * ARROW_KEEP_DISTANCE_HORIZONTAL
+
+                    // Use getLookingProbability + wide detection (from autoclef)
+                    double lookProb = LookHelper.getLookingProbability(projectile.position, plyPos, projectile.velocity.normalize());
+                    if (lookProb > 0.7 && horizontalDistanceSq < ARROW_DETECT_HORIZONTAL_SQ
                             && verticalDistance < ARROW_KEEP_DISTANCE_VERTICAL) {
-                        if (mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
-                                && hasShield(mod)) {
+                        // Calculate dodge direction: sprint perpendicular to arrow trajectory
+                        Rotation targetRotation = LookHelper.getLookRotation(mod, expectedHit);
+                        float invertedYaw = (targetRotation.getYaw() + 180) % 360;
+                        if (invertedYaw < 0) invertedYaw += 360;
+                        suggestedProjectileRotation = new Rotation(invertedYaw, 0f);
+
+                        if (runAwayTask == null && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
                             mod.getClientBaritone().getPathingBehavior().requestPause();
-                            LookHelper.lookAt(mod, projectile.position.add(0, 0.3, 0));
                         }
                         return true;
                     }
