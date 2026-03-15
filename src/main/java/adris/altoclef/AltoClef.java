@@ -337,6 +337,10 @@ public class AltoClef implements ModInitializer {
         EventBus.subscribe(adris.altoclef.eventbus.events.multiplayer.ProjectileEvent.class, evt ->
                 getMobDefenseChain().onProjectileLaunched(this, evt.entity, evt.sticked));
 
+        // Item use detection — detect players aiming bows (disabled in MobDefenseChain for now)
+        EventBus.subscribe(adris.altoclef.eventbus.events.multiplayer.ItemUseEvent.class, evt ->
+                getMobDefenseChain().onPlayerItemUse(this, evt.entity, evt.released));
+
         // Playground
         Playground.IDLE_TEST_INIT_FUNCTION(this);
 

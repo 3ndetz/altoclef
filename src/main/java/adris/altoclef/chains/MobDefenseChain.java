@@ -74,6 +74,10 @@ public class MobDefenseChain extends SingleTaskChain {
     // Player threat tracking (ported from autoclef)
     public Task _killTask = null;
     private final TimerGame _runAwayTimer = new TimerGame(2);
+    // Projectile pre-dodge (ported from autoclef, DISABLED — kept for future use)
+    private Rotation suggestedProjectileRotation;
+    private final TimerGame preProjectileTimer = new TimerGame(0.3);
+    private final TimerGame projectileTimer = new TimerGame(0.7);
 
     private float cachedLastPriority;
 
@@ -410,6 +414,30 @@ public class MobDefenseChain extends SingleTaskChain {
     public void onProjectileLaunched(AltoClef mod, ProjectileEntity arrowEntity, boolean sticked) {
         if (!sticked)
             mod.getEntityTracker().addProjectile(arrowEntity);
+    }
+
+    /**
+     * Called from ItemUseEvent subscription — detect players aiming bows at us.
+     * DISABLED for now (kept from autoclef for future activation).
+     */
+    @SuppressWarnings("unused")
+    public void onPlayerItemUse(AltoClef mod, Entity entity, boolean released) {
+        // DISABLED FOR NOW — ported from autoclef, was disabled there too.
+        // Enable by removing the `if (false &&` guard when ready to test.
+        if (false && entity instanceof PlayerEntity player && mod.getPlayer() != null) {
+            double prob = LookHelper.getLookingProbability(player, mod.getPlayer());
+
+            if (prob > 0.96) {
+                Rotation targetRotation = LookHelper.getLookRotation(mod, player.getPos());
+                float invertedYaw = (targetRotation.getYaw() - 90) % 360;
+                if (invertedYaw < 0) invertedYaw += 360;
+                suggestedProjectileRotation = new Rotation(invertedYaw, 0f);
+                projectileTimer.reset();
+                if (entity.getName() != null) {
+                    Debug.logMessage("Dodging ranged attack from " + entity.getName().getString());
+                }
+            }
+        }
     }
 
     private static boolean hasShield(AltoClef mod) {
