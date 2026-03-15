@@ -152,7 +152,17 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
             cachedGoal = newGoal(mod);
         }
 
-        // If Tungsten is actively pathfinding, let it work
+        // ── Tungsten lock: exclusive 30s control, Baritone stays off ──
+        if (TungstenHelper.isLocked()) {
+            TungstenHelper.tickLock();
+            mod.getClientBaritone().getPathingBehavior().forceCancel();
+            checker.reset();
+            long remaining = Math.max(0, (TungstenHelper.lockUntilMs() - System.currentTimeMillis()) / 1000);
+            setDebugState("Tungsten pathfinding (" + remaining + "s left)");
+            return null;
+        }
+
+        // If Tungsten is actively pathfinding (outside lock), let it finish
         if (TungstenHelper.isActive()) {
             checker.reset();
             setDebugState("Tungsten fallback pathfinding...");
@@ -194,7 +204,8 @@ public abstract class CustomBaritoneGoalTask extends Task implements ITaskRequir
                 }
             }
         }
-        if (!mod.getClientBaritone().getCustomGoalProcess().isActive()
+        if (!TungstenHelper.isActive()
+                && !mod.getClientBaritone().getCustomGoalProcess().isActive()
                 && mod.getClientBaritone().getPathingBehavior().isSafeToCancel()) {
             mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(cachedGoal);
         }

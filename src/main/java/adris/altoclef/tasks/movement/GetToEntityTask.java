@@ -146,10 +146,30 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
             }
             stuckCheck.reset();
         }
-        // If Tungsten is actively pathfinding, let it work
+        boolean parkourMode = AltoClef.getInstance().getModSettings().isSuperParkourMode()
+                && TungstenHelper.isTungstenLoaded();
+
+        // ── superParkourMode: Tungsten is PRIMARY, start immediately ──
+        if (parkourMode && !TungstenHelper.isLocked() && !TungstenHelper.isActive()) {
+            if (TungstenHelper.tryPathToEntity(_entity)) {
+                mod.getClientBaritone().getPathingBehavior().forceCancel();
+            }
+        }
+
+        // ── Tungsten lock: exclusive 30s control, Baritone stays off ──
+        if (TungstenHelper.isLocked()) {
+            TungstenHelper.tickLock();
+            mod.getClientBaritone().getPathingBehavior().forceCancel();
+            _progress.reset();
+            long remaining = Math.max(0, (TungstenHelper.lockUntilMs() - System.currentTimeMillis()) / 1000);
+            setDebugState("Tungsten pathfinding (" + remaining + "s left)");
+            return null;
+        }
+
+        // If Tungsten is actively pathfinding (outside lock), let it finish
         if (TungstenHelper.isActive()) {
             _progress.reset();
-            setDebugState("Tungsten fallback pathfinding...");
+            setDebugState("Tungsten pathfinding...");
             return null;
         }
 
@@ -159,7 +179,9 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
             return _wanderTask;
         }
 
-        if (!mod.getClientBaritone().getCustomGoalProcess().isActive()) {
+        // Baritone: only if Tungsten not active
+        if (!TungstenHelper.isActive()
+                && !mod.getClientBaritone().getCustomGoalProcess().isActive()) {
             mod.getClientBaritone().getCustomGoalProcess().setGoalAndPath(new GoalFollowEntity(_entity, _closeEnoughDistance));
         }
 
@@ -169,16 +191,16 @@ public class GetToEntityTask extends Task implements ITaskRequiresGrounded {
         }
 
         if (!_progress.check(mod)) {
-            // Baritone failed — try Tungsten before wandering
+            // Baritone failed — try Tungsten (acquires 30s lock)
             if (TungstenHelper.tryPathToEntity(_entity)) {
                 mod.getClientBaritone().getPathingBehavior().forceCancel();
-                setDebugState("Baritone stuck, trying Tungsten...");
+                setDebugState(parkourMode ? "Tungsten retrying" : "Baritone stuck → Tungsten locked for 30s");
                 return null;
             }
-            return _wanderTask;
+            if (!parkourMode) return _wanderTask;
         }
 
-        setDebugState("Going to entity");
+        setDebugState(parkourMode ? "Tungsten chasing entity" : "Going to entity");
         return null;
     }
 

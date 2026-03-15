@@ -4,6 +4,7 @@ import adris.altoclef.AltoClef;
 import adris.altoclef.butler.ButlerConfig;
 import adris.altoclef.commandsystem.ArgParser;
 import adris.altoclef.commandsystem.Command;
+import adris.altoclef.commandsystem.args.SettingNameArg;
 import adris.altoclef.commandsystem.args.StringArg;
 import adris.altoclef.commandsystem.exception.CommandException;
 import adris.altoclef.util.helpers.ConfigHelper;
@@ -15,7 +16,7 @@ public class SetSettingsCommand extends Command {
 
     public SetSettingsCommand() throws CommandException {
         super("set", "set <setting_name> <new_value> | set list",
-                new StringArg("setting"),
+                new SettingNameArg("setting"),
                 new StringArg("new value", null));
     }
 
@@ -31,7 +32,14 @@ public class SetSettingsCommand extends Command {
 
         String newValue = parser.get(String.class);
         if (newValue == null) {
-            mod.log("Укажи новое значение для настройки: " + settingName);
+            // Show current value
+            var val = SettingsReflectionHelper.getSetting(mod.getModSettings(), settingName);
+            if (val.isEmpty()) val = SettingsReflectionHelper.getSetting(ButlerConfig.getInstance(), settingName);
+            if (val.isPresent()) {
+                mod.log(settingName + " = " + val.get());
+            } else {
+                mod.log("Настройка '" + settingName + "' не найдена.");
+            }
             finish();
             return;
         }

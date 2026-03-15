@@ -223,6 +223,14 @@ public class Settings implements IFailableConfigFile {
     private boolean dodgeProjectiles = true;
 
     /**
+     * If enabled, Tungsten A* pathfinder is used as the PRIMARY pathfinder
+     * when chasing entities (players, mobs). Baritone only activates as fallback
+     * when Tungsten fails. Requires Tungsten mod to be installed.
+     * Best for PvP and parkour-heavy servers where Baritone struggles.
+     */
+    private boolean superParkourMode = false;
+
+    /**
      * Skeletons and large groups of mobs are a huge pain.
      * <p>
      * With this set to true, the bot may either
@@ -513,6 +521,10 @@ public class Settings implements IFailableConfigFile {
 
     public boolean isDodgeProjectiles() {
         return dodgeProjectiles;
+    }
+
+    public boolean isSuperParkourMode() {
+        return superParkourMode;
     }
 
     public boolean isAutoEat() {

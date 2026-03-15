@@ -167,8 +167,8 @@ dependencies {
     // Tungsten pathfinder — bundled inside altoclef JAR via Jar-in-Jar.
     // Publish first: cd ../Tungsten && gradlew publishToMavenLocal
     if (project.name == "1.21") {
-        modImplementation "com.example:Tungsten:ALPHA-1.6.0-1.21compat"
-        include "com.example:Tungsten:ALPHA-1.6.0-1.21compat"
+        modImplementation "com.example:Tungsten:ALPHA-1.6.0-1.21compat-SNAPSHOT"
+        include "com.example:Tungsten:ALPHA-1.6.0-1.21compat-SNAPSHOT"
     }
 }
 shadowJar {
